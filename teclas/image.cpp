@@ -1,527 +1,166 @@
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include "GL/glew.h"
-#include "../extra/picopng.h"
-#include "image.h"
-#include "utils.h"
-#include "camera.h"
+#include "application.h"
 #include "mesh.h"
+#include "shader.h"
+#include "utils.h" 
 
-Image::Image() {
-	width = 0; height = 0;
-	pixels = NULL;
+Application::Application(const char* caption, int width, int height)
+{
+    
+	this->window = createWindow(caption, width, height);
+
+	int w,h;
+	SDL_GetWindowSize(window,&w,&h);
+
+	this->mouse_state = 0;
+	this->time = 0.f;
+	this->window_width = w;
+	this->window_height = h;
+	this->keystate = SDL_GetKeyboardState(nullptr);
+
+	this->framebuffer.Resize(w, h);
 }
 
-Image::Image(unsigned int width, unsigned int height)
+Application::~Application()
 {
-	this->width = width;
-	this->height = height;
-	pixels = new Color[width*height];
-	memset(pixels, 0, width * height * sizeof(Color));
 }
 
-// Copy constructor
-Image::Image(const Image& c)
+void Application::Init(void)
 {
-	pixels = NULL;
-	width = c.width;
-	height = c.height;
-	bytes_per_pixel = c.bytes_per_pixel;
-	if(c.pixels)
-	{
-		pixels = new Color[width*height];
-		memcpy(pixels, c.pixels, width*height*bytes_per_pixel);
-	}
+	std::cout << "Initiating app..." << std::endl;
 }
 
-// Assign operator
-Image& Image::operator = (const Image& c)
-{
-	if(pixels) delete pixels;
-	pixels = NULL;
-
-	width = c.width;
-	height = c.height;
-	bytes_per_pixel = c.bytes_per_pixel;
-
-	if(c.pixels)
-	{
-		pixels = new Color[width*height*bytes_per_pixel];
-		memcpy(pixels, c.pixels, width*height*bytes_per_pixel);
-	}
-	return *this;
+int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
+    return static_cast<int>(sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2)));
 }
 
-Image::~Image()
-{
-	if(pixels) 
-		delete pixels;
+void Application::Render(void) {
+    // Clear the framebuffer
+
+    // Only render when `shouldRender` is true
+    if (shouldRender) {
+        switch (exercise) {
+            case 1: // Draw Line
+                framebuffer.DrawLineDDA(startX, startY, endX, endY, Color(255, 255, 255)); // White line
+                break;
+
+            case 2: // Draw Rectangle
+                framebuffer.DrawRect(startX, startY, abs(endX - startX), abs(endY - startY), Color(255, 0, 0), 3, true, Color(0, 255, 0)); // Red border, green fill
+                break;
+
+            case 3: { // Start a new scope for this case
+                int radius = ComputeRadius(startX, startY, endX, endY); // Calculate radius
+                framebuffer.RasterizeCircle(startX, startY, radius, Color(0, 0, 255)); // Blue circle
+                break;
+            }
+
+            case 4: { // Start a new scope for this case
+                framebuffer.RasterizeTriangle(startX, startY, (startX + endX) / 2, endY, endX, startY, Color(255, 255, 0)); // Yellow triangle
+                break;
+            }
+
+            default:
+                std::cout << "No action for exercise " << exercise << std::endl;
+                break;
+        }
+
+        // Reset the render flag
+        shouldRender = false;
+    }
+
+    // Render the framebuffer to the screen
+    framebuffer.Render();
 }
 
-void Image::Render()
+
+
+
+
+// Called after render
+void Application::Update(float seconds_elapsed)
 {
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glDrawPixels(width, height, bytes_per_pixel == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
 }
 
-// Change image size (the old one will remain in the top-left corner)
-void Image::Resize(unsigned int width, unsigned int height)
+//keyboard press event 
+void Application::OnKeyPressed( SDL_KeyboardEvent event )
 {
-	Color* new_pixels = new Color[width*height];
-	unsigned int min_width = this->width > width ? width : this->width;
-	unsigned int min_height = this->height > height ? height : this->height;
+	// KEY CODES: https://wiki.libsdl.org/SDL2/SDL_Keycode
+	switch(event.keysym.sym) {
+		
+        case SDLK_1:
+            exercise = 1; // Draw Line
+            std::cout << "Exercise 1: Draw Line" << std::endl;
+            break;
 
-	for(unsigned int x = 0; x < min_width; ++x)
-		for(unsigned int y = 0; y < min_height; ++y)
-			new_pixels[ y * width + x ] = GetPixel(x,y);
+        case SDLK_2:
+            exercise = 2; // Draw Rectangle
+            std::cout << "Exercise 2: Draw Rectangle" << std::endl;
+            break;
 
-	delete pixels;
-	this->width = width;
-	this->height = height;
-	pixels = new_pixels;
+        case SDLK_3:
+            exercise = 3; // Draw Circle
+            std::cout << "Exercise 3: Draw Circle" << std::endl;
+            break;
+
+        case SDLK_ESCAPE:
+            exit(0); // Exit the program
+            break;
+
+        default:
+            exercise = 0; // No valid exercise
+            std::cout << "No action for this key" << std::endl;
+            break;
+    }
+
 }
 
-// Change image size and scale the content
-void Image::Scale(unsigned int width, unsigned int height)
-{
-	Color* new_pixels = new Color[width*height];
 
-	for(unsigned int x = 0; x < width; ++x)
-		for(unsigned int y = 0; y < height; ++y)
-			new_pixels[ y * width + x ] = GetPixel((unsigned int)(this->width * (x / (float)width)), (unsigned int)(this->height * (y / (float)height)) );
-
-	delete pixels;
-	this->width = width;
-	this->height = height;
-	pixels = new_pixels;
+void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
+    if (event.button == SDL_BUTTON_LEFT) {
+        if (exercise == 1) { // Check if the exercise is Draw Line
+            if (p1 == NULL) {
+                p1 = new Vector2(mouse_position.x, mouse_position.y); // Assign first point
+            } else {
+                p2 = new Vector2(mouse_position.x, mouse_position.y); // Assign second point
+                framebuffer.DrawLineDDA(p1->x, p1->y, p2->x, p2->y, selected_color); // Draw line
+                delete p1; // Free memory for p1
+                delete p2; // Free memory for p2
+                p1 = NULL; // Reset pointers
+                p2 = NULL;
+            }
+        }
+    }
 }
 
-Image Image::GetArea(unsigned int start_x, unsigned int start_y, unsigned int width, unsigned int height)
-{
-	Image result(width, height);
-	for(unsigned int x = 0; x < width; ++x)
-		for(unsigned int y = 0; y < height; ++y)
-		{
-			if( (x + start_x) < this->width && (y + start_y) < this->height) 
-				result.SetPixelUnsafe( x, y, GetPixel(x + start_x,y + start_y) );
-		}
-	return result;
+                                        
+      
+
+
+void Application::OnMouseButtonUp(SDL_MouseButtonEvent event) {
+    if (event.button == SDL_BUTTON_LEFT) {
+        // Example: Logging or cleanup after mouse button release
+        std::cout << "Mouse button released at (" << mouse_position.x << ", " << mouse_position.y << ")" << std::endl;
+    }
 }
 
-void Image::FlipY()
+
+
+
+
+void Application::OnMouseMove(SDL_MouseButtonEvent event)
 {
-	int row_size = bytes_per_pixel * width;
-	Uint8* temp_row = new Uint8[row_size];
-#pragma omp simd
-	for (int y = 0; y < height * 0.5; y += 1)
-	{
-		Uint8* pos = (Uint8*)pixels + y * row_size;
-		memcpy(temp_row, pos, row_size);
-		Uint8* pos2 = (Uint8*)pixels + (height - y - 1) * row_size;
-		memcpy(pos, pos2, row_size);
-		memcpy(pos2, temp_row, row_size);
-	}
-	delete[] temp_row;
-}
-
-bool Image::LoadPNG(const char* filename, bool flip_y)
-{
-	std::string sfullPath = absResPath(filename);
-	std::ifstream file(sfullPath, std::ios::in | std::ios::binary | std::ios::ate);
-
-	// Get filesize
-	std::streamsize size = 0;
-	if (file.seekg(0, std::ios::end).good()) size = file.tellg();
-	if (file.seekg(0, std::ios::beg).good()) size -= file.tellg();
-
-	if (!size)
-		return false;
-
-	std::vector<unsigned char> buffer;
-
-	// Read contents of the file into the vector
-	if (size > 0)
-	{
-		buffer.resize((size_t)size);
-		file.read((char*)(&buffer[0]), size);
-	}
-	else
-		buffer.clear();
-
-	std::vector<unsigned char> out_image;
-
-	if (decodePNG(out_image, width, height, buffer.empty() ? 0 : &buffer[0], (unsigned long)buffer.size(), true) != 0)
-		return false;
-
-	size_t bufferSize = out_image.size();
-	unsigned int originalBytesPerPixel = (unsigned int)bufferSize / (width * height);
 	
-	// Force 3 channels
-	bytes_per_pixel = 3;
-
-	if (originalBytesPerPixel == 3) {
-		pixels = new Color[bufferSize];
-		memcpy(pixels, &out_image[0], bufferSize);
-	}
-	else if (originalBytesPerPixel == 4) {
-
-		unsigned int newBufferSize = width * height * bytes_per_pixel;
-		pixels = new Color[newBufferSize];
-
-		unsigned int k = 0;
-		for (unsigned int i = 0; i < bufferSize; i += originalBytesPerPixel) {
-			pixels[k] = Color(out_image[i], out_image[i + 1], out_image[i + 2]);
-			k++;
-		}
-	}
-
-	// Flip pixels in Y
-	if (flip_y)
-		FlipY();
-
-	return true;
 }
 
-// Loads an image from a TGA file
-bool Image::LoadTGA(const char* filename, bool flip_y)
+void Application::OnWheel(SDL_MouseWheelEvent event)
 {
-	unsigned char TGAheader[12] = {0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-	unsigned char TGAcompare[12];
-	unsigned char header[6];
-	unsigned int imageSize;
-	unsigned int bytesPerPixel;
+	float dy = event.preciseY;
 
-    std::string sfullPath = absResPath( filename );
-
-	FILE * file = fopen( sfullPath.c_str(), "rb");
-   	if ( file == NULL || fread(TGAcompare, 1, sizeof(TGAcompare), file) != sizeof(TGAcompare) ||
-		memcmp(TGAheader, TGAcompare, sizeof(TGAheader)) != 0 ||
-		fread(header, 1, sizeof(header), file) != sizeof(header))
-	{
-		std::cerr << "File not found: " << sfullPath.c_str() << std::endl;
-		if (file == NULL)
-			return NULL;
-		else
-		{
-			fclose(file);
-			return NULL;
-		}
-	}
-
-	TGAInfo* tgainfo = new TGAInfo;
-    
-	tgainfo->width = header[1] * 256 + header[0];
-	tgainfo->height = header[3] * 256 + header[2];
-    
-	if (tgainfo->width <= 0 || tgainfo->height <= 0 || (header[4] != 24 && header[4] != 32))
-	{
-		fclose(file);
-		delete tgainfo;
-		return NULL;
-	}
-    
-	tgainfo->bpp = header[4];
-	bytesPerPixel = tgainfo->bpp / 8;
-	imageSize = tgainfo->width * tgainfo->height * bytesPerPixel;
-    
-	tgainfo->data = new unsigned char[imageSize];
-    
-	if (tgainfo->data == NULL || fread(tgainfo->data, 1, imageSize, file) != imageSize)
-	{
-		if (tgainfo->data != NULL)
-			delete tgainfo->data;
-            
-		fclose(file);
-		delete tgainfo;
-		return false;
-	}
-
-	fclose(file);
-
-	// Save info in image
-	if(pixels)
-		delete pixels;
-
-	width = tgainfo->width;
-	height = tgainfo->height;
-	pixels = new Color[width*height];
-
-	// Convert to float all pixels
-	for (unsigned int y = 0; y < height; ++y) {
-		for (unsigned int x = 0; x < width; ++x) {
-			unsigned int pos = y * width * bytesPerPixel + x * bytesPerPixel;
-			// Make sure we don't access out of memory
-			if( (pos < imageSize) && (pos + 1 < imageSize) && (pos + 2 < imageSize))
-				SetPixelUnsafe(x, height - y - 1, Color(tgainfo->data[pos + 2], tgainfo->data[pos + 1], tgainfo->data[pos]));
-		}
-	}
-
-	// Flip pixels in Y
-	if (flip_y)
-		FlipY();
-
-	delete tgainfo->data;
-	delete tgainfo;
-
-	return true;
+	// ...
 }
 
-// Saves the image to a TGA file
-bool Image::SaveTGA(const char* filename)
-{
-	unsigned char TGAheader[12] = {0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-	std::string fullPath = absResPath(filename);
-	FILE *file = fopen(fullPath.c_str(), "wb");
-	if ( file == NULL )
-	{
-		perror("Failed to open file: ");
-		return false;
-	}
-
-	unsigned short header_short[3];
-	header_short[0] = width;
-	header_short[1] = height;
-	unsigned char* header = (unsigned char*)header_short;
-	header[4] = 24;
-	header[5] = 0;
-
-	fwrite(TGAheader, 1, sizeof(TGAheader), file);
-	fwrite(header, 1, 6, file);
-
-	// Convert pixels to unsigned char
-	unsigned char* bytes = new unsigned char[width*height*3];
-	for(unsigned int y = 0; y < height; ++y)
-		for(unsigned int x = 0; x < width; ++x)
-		{
-			Color c = pixels[y*width+x];
-			unsigned int pos = (y*width+x)*3;
-			bytes[pos+2] = c.r;
-			bytes[pos+1] = c.g;
-			bytes[pos] = c.b;
-		}
-
-	fwrite(bytes, 1, width*height*3, file);
-	fclose(file);
-
-	return true;
+void Application::OnFileChanged(const char* filename)
+{ 
+	Shader::ReloadSingleShader(filename);
 }
-
-void Image::DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor) {
-    // Fill the rectangle if required
-    if (isFilled) {
-        for (int i = x; i < x + w; ++i) {
-            for (int j = y; j < y + h; ++j) {
-                SetPixel(i, j, fillColor);
-            }
-        }
-    }
-
-    // Draw the top and bottom borders
-    for (int i = 0; i < borderWidth; ++i) {
-        // Top border
-        for (int j = x; j < x + w; ++j) {
-            SetPixel(j, y + i, borderColor);
-        }
-        // Bottom border
-        for (int j = x; j < x + w; ++j) {
-            SetPixel(j, y + h - 1 - i, borderColor);
-        }
-    }
-
-    // Draw the left and right borders
-    for (int i = 0; i < borderWidth; ++i) {
-        // Left border
-        for (int j = y; j < y + h; ++j) {
-            SetPixel(x + i, j, borderColor);
-        }
-        // Right border
-        for (int j = y; j < y + h; ++j) {
-            SetPixel(x + w - 1 - i, j, borderColor);
-        }
-    }
-}
-
-
-#ifndef IGNORE_LAMBDAS
-
-// You can apply and algorithm for two images and store the result in the first one
-// ForEachPixel( img, img2, [](Color a, Color b) { return a + b; } );
-template <typename F>
-void ForEachPixel(Image& img, const Image& img2, F f) {
-	for(unsigned int pos = 0; pos < img.width * img.height; ++pos)
-		img.pixels[pos] = f( img.pixels[pos], img2.pixels[pos] );
-}
-
-#endif
-
-FloatImage::FloatImage(unsigned int width, unsigned int height)
-{
-	this->width = width;
-	this->height = height;
-	pixels = new float[width * height];
-	memset(pixels, 0, width * height * sizeof(float));
-}
-
-// Copy constructor
-FloatImage::FloatImage(const FloatImage& c) {
-	pixels = NULL;
-
-	width = c.width;
-	height = c.height;
-	if (c.pixels)
-	{
-		pixels = new float[width * height];
-		memcpy(pixels, c.pixels, width * height * sizeof(float));
-	}
-}
-
-// Assign operator
-FloatImage& FloatImage::operator = (const FloatImage& c)
-{
-	if (pixels) delete pixels;
-	pixels = NULL;
-
-	width = c.width;
-	height = c.height;
-	if (c.pixels)
-	{
-		pixels = new float[width * height * sizeof(float)];
-		memcpy(pixels, c.pixels, width * height * sizeof(float));
-	}
-	return *this;
-}
-
-FloatImage::~FloatImage()
-{
-	if (pixels)
-		delete pixels;
-}
-
-// Change image size (the old one will remain in the top-left corner)
-void FloatImage::Resize(unsigned int width, unsigned int height)
-{
-	float* new_pixels = new float[width * height];
-	unsigned int min_width = this->width > width ? width : this->width;
-	unsigned int min_height = this->height > height ? height : this->height;
-
-	for (unsigned int x = 0; x < min_width; ++x)
-		for (unsigned int y = 0; y < min_height; ++y)
-			new_pixels[y * width + x] = GetPixel(x, y);
-
-	delete pixels;
-	this->width = width;
-	this->height = height;
-	pixels = new_pixels;
-}
-
-void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& color) {
-    // Calculate the differences in x and y
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-
-    // Determine the number of steps required
-    int steps = std::max(abs(dx), abs(dy));
-
-    // Compute the increment for each step
-    float xIncrement = dx / static_cast<float>(steps);
-    float yIncrement = dy / static_cast<float>(steps);
-
-    // Starting point
-    float x = x0;
-    float y = y0;
-
-    // Draw the line
-    for (int i = 0; i <= steps; ++i) {
-        // Set the pixel at the rounded position
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            SetPixel(static_cast<int>(round(x)), static_cast<int>(round(y)), color);
-        }
-
-        // Increment x and y
-        x += xIncrement;
-        y += yIncrement;
-    }
-}
-void Image::RasterizeTriangle(int x0, int y0, int x1, int y1, int x2, int y2, const Color& fillColor) {
-    // Step 1: Define the Active Edge Table (AET)
-    struct Cell {
-        int minX = INT_MAX;
-        int maxX = INT_MIN;
-    };
-
-    int height = std::max({y0, y1, y2}) - std::min({y0, y1, y2}) + 1;
-    std::vector<Cell> AET(height);
-
-    // Step 2: Helper function to update the AET
-    auto updateAET = [&](int xStart, int yStart, int xEnd, int yEnd) {
-        if (yStart == yEnd) return; // Horizontal edges don't contribute to the AET
-
-        if (yStart > yEnd) std::swap(xStart, xEnd), std::swap(yStart, yEnd);
-
-        float slope = (float)(xEnd - xStart) / (yEnd - yStart);
-        float x = xStart;
-
-        for (int y = yStart; y <= yEnd; ++y) {
-            int row = y - std::min({y0, y1, y2});
-            AET[row].minX = std::min(AET[row].minX, (int)x);
-            AET[row].maxX = std::max(AET[row].maxX, (int)x);
-            x += slope;
-        }
-    };
-
-    // Step 3: Populate the AET by processing edges
-    updateAET(x0, y0, x1, y1);
-    updateAET(x1, y1, x2, y2);
-    updateAET(x2, y2, x0, y0);
-
-    // Step 4: Rasterize the triangle using the AET
-    for (int y = 0; y < height; ++y) {
-        if (AET[y].minX <= AET[y].maxX) {
-            for (int x = AET[y].minX; x <= AET[y].maxX; ++x) {
-                SetPixel(x, y + std::min({y0, y1, y2}), fillColor);
-            }
-        }
-    }
-}
-
-void Image::RasterizeCircle(int xc, int yc, int radius, const Color& color) {
-    // Start at the topmost point
-    int x = 0;
-    int y = radius;
-    int p = 1 - radius; // Initial decision parameter
-
-    // Helper function to draw symmetric points
-    auto drawSymmetricPoints = [&](int x, int y) {
-        SetPixel(xc + x, yc + y, color);
-        SetPixel(xc - x, yc + y, color);
-        SetPixel(xc + x, yc - y, color);
-        SetPixel(xc - x, yc - y, color);
-        SetPixel(xc + y, yc + x, color);
-        SetPixel(xc - y, yc + x, color);
-        SetPixel(xc + y, yc - x, color);
-        SetPixel(xc - y, yc - x, color);
-    };
-
-    // Draw the initial set of symmetric points
-    drawSymmetricPoints(x, y);
-
-    // Iterate until x meets y
-    while (x < y) {
-        x++;
-        if (p < 0) {
-            // Midpoint is inside the circle
-            p += 2 * x + 1;
-        } else {
-            // Midpoint is outside or on the circle
-            y--;
-            p += 2 * (x - y) + 1;
-        }
-        drawSymmetricPoints(x, y);
-    }
-}
-
-
 
