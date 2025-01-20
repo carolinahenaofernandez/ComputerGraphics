@@ -523,3 +523,5 @@ void Image::RasterizeCircle(int xc, int yc, int radius, const Color& color) {
     }
 }
 
+
+
