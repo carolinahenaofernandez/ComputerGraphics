@@ -1,166 +1,132 @@
-#include "application.h"
-#include "mesh.h"
-#include "shader.h"
-#include "utils.h" 
+/*
+	+ This file defines the class Image that allows to manipulate images.
+	+ It defines all the need operators for Color and Image
+*/
 
-Application::Application(const char* caption, int width, int height)
+#pragma once
+
+#include <string.h>
+#include <stdio.h>
+#include <iostream>
+#include "framework.h"
+
+//remove unsafe warnings
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996)
+#endif
+
+class FloatImage;
+class Entity;
+class Camera;
+
+// A matrix of pixels
+class Image
 {
-    
-	this->window = createWindow(caption, width, height);
+	// A general struct to store all the information about a TGA file
+	typedef struct sTGAInfo {
+		unsigned int width;
+		unsigned int height;
+		unsigned int bpp; // Bits per pixel
+		unsigned char* data; // Bytes with the pixel information
+	} TGAInfo;
 
-	int w,h;
-	SDL_GetWindowSize(window,&w,&h);
+public:
+	unsigned int width;
+	unsigned int height;
+	unsigned int bytes_per_pixel = 3; // Bits per pixel
+    void DrawLineDDA(int x0, int y0, int x1, int y1, const Color& color);
+    void DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled = false, const Color& fillColor = Color::BLACK);
+    void RasterizeTriangle(int x0, int y0, int x1, int y1, int x2, int y2, const Color& fillColor);
+    void RasterizeCircle(int xc, int yc, int radius, const Color& color);
 
-	this->mouse_state = 0;
-	this->time = 0.f;
-	this->window_width = w;
-	this->window_height = h;
-	this->keystate = SDL_GetKeyboardState(nullptr);
+    Color* pixels;
 
-	this->framebuffer.Resize(w, h);
-}
+	// Constructors
+	Image();
+	Image(unsigned int width, unsigned int height);
+	Image(const Image& c);
+	Image& operator = (const Image& c); // Assign operator
 
-Application::~Application()
-{
-}
+	// Destructor
+	~Image();
 
-void Application::Init(void)
-{
-	std::cout << "Initiating app..." << std::endl;
-}
+	void Render();
 
-int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
-    return static_cast<int>(sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2)));
-}
+	// Get the pixel at position x,y
+	Color GetPixel(unsigned int x, unsigned int y) const { return pixels[ y * width + x ]; }
+	Color& GetPixelRef(unsigned int x, unsigned int y)	{ return pixels[ y * width + x ]; }
+	Color GetPixelSafe(unsigned int x, unsigned int y) const {	
+		x = clamp((unsigned int)x, 0, width-1); 
+		y = clamp((unsigned int)y, 0, height-1); 
+		return pixels[ y * width + x ]; 
+	}
 
-void Application::Render(void) {
-    // Clear the framebuffer
+	// Set the pixel at position x,y with value C
+	void SetPixel(unsigned int x, unsigned int y, const Color& c) { if(x < 0 || x > width-1) return; if(y < 0 || y > height-1) return; pixels[ y * width + x ] = c; }
+	inline void SetPixelUnsafe(unsigned int x, unsigned int y, const Color& c) { pixels[ y * width + x ] = c; }
 
-    // Only render when `shouldRender` is true
-    if (shouldRender) {
-        switch (exercise) {
-            case 1: // Draw Line
-                framebuffer.DrawLineDDA(startX, startY, endX, endY, Color(255, 255, 255)); // White line
-                break;
-
-            case 2: // Draw Rectangle
-                framebuffer.DrawRect(startX, startY, abs(endX - startX), abs(endY - startY), Color(255, 0, 0), 3, true, Color(0, 255, 0)); // Red border, green fill
-                break;
-
-            case 3: { // Start a new scope for this case
-                int radius = ComputeRadius(startX, startY, endX, endY); // Calculate radius
-                framebuffer.RasterizeCircle(startX, startY, radius, Color(0, 0, 255)); // Blue circle
-                break;
-            }
-
-            case 4: { // Start a new scope for this case
-                framebuffer.RasterizeTriangle(startX, startY, (startX + endX) / 2, endY, endX, startY, Color(255, 255, 0)); // Yellow triangle
-                break;
-            }
-
-            default:
-                std::cout << "No action for exercise " << exercise << std::endl;
-                break;
-        }
-
-        // Reset the render flag
-        shouldRender = false;
-    }
-
-    // Render the framebuffer to the screen
-    framebuffer.Render();
-}
-
-
-
-
-
-// Called after render
-void Application::Update(float seconds_elapsed)
-{
-
-}
-
-//keyboard press event 
-void Application::OnKeyPressed( SDL_KeyboardEvent event )
-{
-	// KEY CODES: https://wiki.libsdl.org/SDL2/SDL_Keycode
-	switch(event.keysym.sym) {
-		
-        case SDLK_1:
-            exercise = 1; // Draw Line
-            std::cout << "Exercise 1: Draw Line" << std::endl;
-            break;
-
-        case SDLK_2:
-            exercise = 2; // Draw Rectangle
-            std::cout << "Exercise 2: Draw Rectangle" << std::endl;
-            break;
-
-        case SDLK_3:
-            exercise = 3; // Draw Circle
-            std::cout << "Exercise 3: Draw Circle" << std::endl;
-            break;
-
-        case SDLK_ESCAPE:
-            exit(0); // Exit the program
-            break;
-
-        default:
-            exercise = 0; // No valid exercise
-            std::cout << "No action for this key" << std::endl;
-            break;
-    }
-
-}
-
-
-void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
-    if (event.button == SDL_BUTTON_LEFT) {
-        if (exercise == 1) { // Check if the exercise is Draw Line
-            if (p1 == NULL) {
-                p1 = new Vector2(mouse_position.x, mouse_position.y); // Assign first point
-            } else {
-                p2 = new Vector2(mouse_position.x, mouse_position.y); // Assign second point
-                framebuffer.DrawLineDDA(p1->x, p1->y, p2->x, p2->y, selected_color); // Draw line
-                delete p1; // Free memory for p1
-                delete p2; // Free memory for p2
-                p1 = NULL; // Reset pointers
-                p2 = NULL;
-            }
-        }
-    }
-}
-
-                                        
-      
-
-
-void Application::OnMouseButtonUp(SDL_MouseButtonEvent event) {
-    if (event.button == SDL_BUTTON_LEFT) {
-        // Example: Logging or cleanup after mouse button release
-        std::cout << "Mouse button released at (" << mouse_position.x << ", " << mouse_position.y << ")" << std::endl;
-    }
-}
-
-
-
-
-
-void Application::OnMouseMove(SDL_MouseButtonEvent event)
-{
+	void Resize(unsigned int width, unsigned int height);
+	void Scale(unsigned int width, unsigned int height);
 	
-}
+	void FlipY(); // Flip the image top-down
 
-void Application::OnWheel(SDL_MouseWheelEvent event)
+	// Fill the image with the color C
+	void Fill(const Color& c) { for(unsigned int pos = 0; pos < width*height; ++pos) pixels[pos] = c; }
+
+	// Returns a new image with the area from (startx,starty) of size width,height
+	Image GetArea(unsigned int start_x, unsigned int start_y, unsigned int width, unsigned int height);
+
+	// Save or load images from the hard drive
+	bool LoadPNG(const char* filename, bool flip_y = true);
+	bool LoadTGA(const char* filename, bool flip_y = false);
+	bool SaveTGA(const char* filename);
+
+	void DrawRect(int x, int y, int w, int h, const Color& c);
+
+	// Used to easy code
+	#ifndef IGNORE_LAMBDAS
+
+	// Applies an algorithm to every pixel in an image
+	// you can use lambda sintax:   img.forEachPixel( [](Color c) { return c*2; });
+	// or callback sintax:   img.forEachPixel( mycallback ); //the callback has to be Color mycallback(Color c) { ... }
+	template <typename F>
+	Image& ForEachPixel( F callback )
+	{
+		for(unsigned int pos = 0; pos < width*height; ++pos)
+			pixels[pos] = callback(pixels[pos]);
+		return *this;
+	}
+	#endif
+};
+
+// Image storing one float per pixel instead of a 3 or 4 component Color
+
+class FloatImage
 {
-	float dy = event.preciseY;
+public:
+	unsigned int width;
+	unsigned int height;
+	float* pixels;
 
-	// ...
-}
+	// CONSTRUCTORS 
+	FloatImage() { width = height = 0; pixels = NULL; }
+	FloatImage(unsigned int width, unsigned int height);
+	FloatImage(const FloatImage& c);
+	FloatImage& operator = (const FloatImage& c); //assign operator
 
-void Application::OnFileChanged(const char* filename)
-{ 
-	Shader::ReloadSingleShader(filename);
-}
+	//destructor
+	~FloatImage();
 
+	void Fill(const float& v) { for (unsigned int pos = 0; pos < width * height; ++pos) pixels[pos] = v; }
+
+	//get the pixel at position x,y
+	float GetPixel(unsigned int x, unsigned int y) const { return pixels[y * width + x]; }
+	float& GetPixelRef(unsigned int x, unsigned int y) { return pixels[y * width + x]; }
+
+	//set the pixel at position x,y with value C
+	void SetPixel(unsigned int x, unsigned int y, const float& v) { if (x < 0 || x > width - 1) return; if (y < 0 || y > height - 1) return; pixels[y * width + x] = v; }
+	inline void SetPixelUnsafe(unsigned int x, unsigned int y, const float& v) { pixels[y * width + x] = v; }
+
+	void Resize(unsigned int width, unsigned int height);
+};
