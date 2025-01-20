@@ -35,7 +35,6 @@ int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
 
 void Application::Render(void) {
     // Clear the framebuffer
-    framebuffer.Fill(Color::BLACK);
 
     // Only render when `shouldRender` is true
     if (shouldRender) {
@@ -118,20 +117,32 @@ void Application::OnKeyPressed( SDL_KeyboardEvent event )
 
 void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
     if (event.button == SDL_BUTTON_LEFT) {
-        startX = event.x;  // Save starting point
-        startY = event.y;
+        if (exercise == 1) { // Check if the exercise is Draw Line
+            if (p1 == NULL) {
+                p1 = new Vector2(mouse_position.x, mouse_position.y); // Assign first point
+            } else {
+                p2 = new Vector2(mouse_position.x, mouse_position.y); // Assign second point
+                framebuffer.DrawLineDDA(p1->x, p1->y, p2->x, p2->y, selected_color); // Draw line
+                delete p1; // Free memory for p1
+                delete p2; // Free memory for p2
+                p1 = NULL; // Reset pointers
+                p2 = NULL;
+            }
+        }
     }
 }
+
+                                        
+      
+
 
 void Application::OnMouseButtonUp(SDL_MouseButtonEvent event) {
     if (event.button == SDL_BUTTON_LEFT) {
-        endX = event.x;    // Save ending point
-        endY = event.y;
-
-        // Indicate that the rendering should happen in the next frame
-        shouldRender = true;
+        // Example: Logging or cleanup after mouse button release
+        std::cout << "Mouse button released at (" << mouse_position.x << ", " << mouse_position.y << ")" << std::endl;
     }
 }
+
 
 
 
