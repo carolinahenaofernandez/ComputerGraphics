@@ -54,10 +54,12 @@ void Application::Render(void) {
             break;
         }
 
-        case 4: { // Start a new scope for this case
-            framebuffer.RasterizeTriangle(startX, startY, (startX + endX) / 2, endY, endX, startY, Color(255, 255, 0)); // Yellow triangle
+        case 4: { // Draw Triangle
+            framebuffer.DrawTriangle(Vector2(startX, startY), Vector2((startX + endX) / 2, endY), Vector2(endX, startY), Color(255, 255, 0), false, Color(0, 255, 0));
             break;
         }
+
+
 
         default:
             std::cout << "No action for exercise " << exercise << std::endl;
@@ -102,6 +104,11 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
     case SDLK_3:
         exercise = 3; // Draw Circle
         std::cout << "Exercise 3: Draw Circle" << std::endl;
+        break;
+        
+    case SDLK_4:
+        exercise = 4; // Draw Circle
+        std::cout << "Exercise 4: Draw Triangle" << std::endl;
         break;
 
 
@@ -194,18 +201,13 @@ void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
         else if (exercise == 4) { // Draw Triangle
             if (p1 == NULL) {
                 p1 = new Vector2(mouse_position.x, mouse_position.y); // First vertex
-            }
-            else if (p2 == NULL) {
+            } else if (p2 == NULL) {
                 p2 = new Vector2(mouse_position.x, mouse_position.y); // Second vertex
-            }
-            else {
+            } else {
                 Vector2* p3 = new Vector2(mouse_position.x, mouse_position.y); // Third vertex
-                framebuffer.RasterizeTriangle(p1->x, p1->y, p2->x, p2->y, p3->x, p3->y, selected_color); // Draw triangle
-                delete p1; // Free memory
-                delete p2;
-                delete p3;
-                p1 = NULL;
-                p2 = NULL;
+                framebuffer.DrawTriangle(*p1, *p2, *p3, selected_color, isFilled, selected_color); // Draw triangle
+                delete p1; delete p2; delete p3; // Free memory
+                p1 = NULL; p2 = NULL;
             }
         }
     }
