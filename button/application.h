@@ -1,10 +1,13 @@
+/*
+    + This class encapsulates the application, is in charge of creating the data, getting the user input, process the update and render.
+*/
+
 #pragma once
 
 #include "main/includes.h"
 #include "framework.h"
 #include "image.h"
 
-// Declare the Button class first
 class Button {
 public:
     Image icon;       // The image for the button
@@ -26,10 +29,13 @@ public:
     }
 };
 
-// Now define the Application class
-class Application {
+class Application
+{
 public:
+
+
     // Window
+
     SDL_Window* window = nullptr;
     int window_width;
     int window_height;
@@ -59,7 +65,6 @@ public:
     void OnMouseMove(SDL_MouseButtonEvent event);
     void OnWheel(SDL_MouseWheelEvent event);
     void OnFileChanged(const char* filename);
-    void InitButtons();
 
     // CPU Global framebuffer
     Image framebuffer;
@@ -71,6 +76,7 @@ public:
     void Init(void);
     void Render(void);
     void Update(float dt);
+    void InitButtons(void);
 
     // Other methods to control the app
     void SetWindowSize(int width, int height) {
@@ -80,7 +86,8 @@ public:
         this->framebuffer.Resize(width, height);
     }
 
-    Vector2 GetWindowSize() {
+    Vector2 GetWindowSize()
+    {
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
         return Vector2(float(w), float(h));
