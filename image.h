@@ -31,6 +31,7 @@ class Image
         unsigned char* data; // Bytes with the pixel information
     } TGAInfo;
 
+
 public:
     unsigned int width;
     unsigned int height;
@@ -39,6 +40,8 @@ public:
     void DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled = false, const Color& fillColor = Color::BLACK);
     void DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor);
     void DrawCircle(int x, int y, int r, const Color& borderColor, int borderWidth, bool isFilled= false, const Color& fillColor = Color::BLACK);
+    void ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<std::pair<int, int>>& table, int minY);
+    
 
     Color* pixels;
 
