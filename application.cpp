@@ -37,7 +37,7 @@ int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
 void Application::Render(void) {
     // Clear the framebuffer
 
-    // Only render when `shouldRender` is true
+    // Only render when shouldRender is true
     if (shouldRender) {
         switch (exercise) {
         case 1: // Draw Line
@@ -50,7 +50,7 @@ void Application::Render(void) {
 
         case 3: { // Start a new scope for this case
             int radius = ComputeRadius(startX, startY, endX, endY); // Calculate radius
-            framebuffer.DrawCircle(startX, startY, radius, Color(0, 0, 255),3, false, Color(0,255,0));
+            framebuffer.DrawCircle(startX, startY, radius, Color(0, 0, 255), 3, false, Color(0, 255, 0));
             break;
         }
 
@@ -110,7 +110,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
             isFilled = false;
             std::cout << "Filling OFF" << std::endl;
         }// alternate fill
-        else{
+        else {
             isFilled = true;
             std::cout << "Filling ON" << std::endl;
         }
