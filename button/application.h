@@ -47,6 +47,7 @@ public:
     int endX, endY;       // Ending mouse position
     bool shouldRender;    // Flag to indicate if something should be rendered
     int ComputeRadius(int x1, int y1, int x2, int y2);
+    Color ChooseRandomColor();
     Color selected_color = Color(255, 255, 255); // Default to white
 
     // Add p1 and p2 as pointers to Vector2
