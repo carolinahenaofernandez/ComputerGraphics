@@ -1,7 +1,7 @@
 #include "application.h"
 #include "mesh.h"
 #include "shader.h"
-#include "utils.h" 
+#include "utils.h"
 #include "image.h"
 
 Application::Application(const char* caption, int width, int height)
@@ -50,7 +50,7 @@ void Application::Render(void) {
 
         case 3: { // Start a new scope for this case
             int radius = ComputeRadius(startX, startY, endX, endY); // Calculate radius
-            framebuffer.DrawCircle(startX, startY, radius, Color(0, 0, 255), 1, false); // Blue circle
+            framebuffer.DrawCircle(startX, startY, radius, Color(0, 0, 255),3, false, Color(0,255,0));
             break;
         }
 
@@ -83,7 +83,7 @@ void Application::Update(float seconds_elapsed)
 }
 bool isFilled = false;
 int borderWidth = 1;
-//keyboard press event 
+//keyboard press event
 void Application::OnKeyPressed(SDL_KeyboardEvent event)
 {
     // KEY CODES: https://wiki.libsdl.org/SDL2/SDL_Keycode
@@ -116,15 +116,15 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
         }
         break;
 
-	case SDLK_PLUS: // Increase border width
-		borderWidth++;
-		std::cout << "Border width: " << borderWidth << std::endl;
-		break;
+    case SDLK_PLUS: // Increase border width
+        borderWidth++;
+        std::cout << "Border width: " << borderWidth << std::endl;
+        break;
 
-	case SDLK_MINUS: // Decrease border width
-		borderWidth = std::max(1, borderWidth - 1);
-		std::cout << "Border width: " << borderWidth << std::endl;
-		break;
+    case SDLK_MINUS: // Decrease border width
+        borderWidth = std::max(1, borderWidth - 1);
+        std::cout << "Border width: " << borderWidth << std::endl;
+        break;
 
     case SDLK_ESCAPE:
         exit(0); // Exit the program
@@ -184,7 +184,7 @@ void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
             else {
                 p2 = new Vector2(mouse_position.x, mouse_position.y); // Point on the perimeter
                 int radius = static_cast<int>(sqrt(pow(p2->x - p1->x, 2) + pow(p2->y - p1->y, 2))); // Calculate radius
-                framebuffer.DrawCircle(p1->x, p1->y, radius, selected_color, isFilled); // Draw circle
+                framebuffer.DrawCircle(p1->x, p1->y, radius, selected_color, borderWidth, isFilled, selected_color);
                 delete p1; // Free memory
                 delete p2;
                 p1 = NULL;
