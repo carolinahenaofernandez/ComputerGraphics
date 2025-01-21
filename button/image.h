@@ -43,7 +43,6 @@ public:
     void ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<std::pair<int, int>>& table, int minY);
     void DrawImage(const Image& image, int x, int y);
 
-    
 
     Color* pixels;
 
