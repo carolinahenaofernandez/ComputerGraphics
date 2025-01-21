@@ -25,26 +25,22 @@ Application::~Application()
 {
 }
 
-void Application::Init(void) {
+void Application::Init(void)
+{
     std::cout << "Initiating app..." << std::endl;
     InitButtons();
 }
-
 
 int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
     return static_cast<int>(sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2)));
 }
 
 void Application::Render(void) {
-    // Clear the framebuffer (fill with a background color, e.g., black)
-    framebuffer.Fill(Color(0, 0, 0));
-
-    // Render the buttons (always visible)
     for (const Button& button : buttons) {
-        button.Render(framebuffer);
-    }
+            button.Render(framebuffer);
+        }
 
-    // Render shapes only when shouldRender is true
+    // Only render when shouldRender is true
     if (shouldRender) {
         switch (exercise) {
         case 1: // Draw Line
@@ -55,7 +51,7 @@ void Application::Render(void) {
             framebuffer.DrawRect(startX, startY, abs(endX - startX), abs(endY - startY), Color(255, 0, 0), 3, true, Color(0, 255, 0)); // Red border, green fill
             break;
 
-        case 3: { // Draw Circle
+        case 3: { // Start a new scope for this case
             int radius = ComputeRadius(startX, startY, endX, endY); // Calculate radius
             framebuffer.DrawCircle(startX, startY, radius, Color(0, 0, 255), 3, false, Color(0, 255, 0));
             break;
@@ -66,12 +62,13 @@ void Application::Render(void) {
             break;
         }
 
+                
         default:
             std::cout << "No action for exercise " << exercise << std::endl;
             break;
         }
 
-        // Reset the render flag after rendering
+        // Reset the render flag
         shouldRender = false;
     }
 
@@ -162,21 +159,28 @@ void Application::OnMouseButtonUp(SDL_MouseButtonEvent event) {
 void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
     if (event.button == SDL_BUTTON_LEFT) {
         for (size_t i = 0; i < buttons.size(); ++i) {
-                    if (buttons[i].IsMouseInside(mouse_position)) {
-                        std::cout << "Button " << i << " clicked!" << std::endl;
+                            if (buttons[i].IsMouseInside(mouse_position)) {
+                                std::cout << "Button " << i << " clicked!" << std::endl;
 
-                        // Assign actions based on the button index
-                        switch (i) {
-                        case 0: // First button (Line)
-                            exercise = 1;
-                            break;
-                        case 1: // Second button (Rectangle)
-                            exercise = 2;
-                            break;
-                        // Add other cases for additional buttons
+                                // Assign actions based on the button index
+                                switch (i) {
+                                case 0: // First button (Line)
+                                    exercise = 1;
+                                    break;
+                                case 1: // Second button (Rectangle)
+                                    exercise = 2;
+                                    break;
+                                case 2: // First button (Line)
+                                    exercise = 3;
+                                    break;
+                                case 3: // Second button (Rectangle)
+                                    exercise = 4;
+                                    break;
+                                
+                                // Add other cases for additional buttons
+                                }
+                            }
                         }
-                    }
-                }
         
         if (exercise == 1) { // Draw Line
             if (p1 == NULL) {
@@ -253,16 +257,32 @@ void Application::OnFileChanged(const char* filename)
 {
     Shader::ReloadSingleShader(filename);
 }
-
 void Application::InitButtons() {
-    // Example button setup
-    Image lineIcon(32, 32); // Replace with your actual image loading
-    lineIcon.Fill(Color(255, 255, 255)); // Placeholder: White square
-    buttons.emplace_back(lineIcon, Vector2(10, 10), Vector2(32, 32));
+    const int button_size = 32;   // Size of each button
+    const int spacing = 20;      // Space between buttons
+    const int start_x = 10;      // Starting x-coordinate for buttons
+    const int start_y = 10;      // Starting y-coordinate for buttons
 
-    Image rectIcon(32, 32); // Another button example
-    rectIcon.Fill(Color(255, 0, 0)); // Placeholder: Red square
-    buttons.emplace_back(rectIcon, Vector2(50, 10), Vector2(32, 32));
+    // Line button
+    Image lineIcon(button_size, button_size); // Replace with your actual image loading
+    lineIcon.Fill(Color(0, 0, 255)); // Blue for the line button
+    buttons.emplace_back(lineIcon, Vector2(start_x, start_y), Vector2(button_size, button_size));
 
-    // Add other buttons (circle, triangle, save, load, clear, etc.)
+    // Rectangle button
+    Image rectIcon(button_size, button_size); // Replace with your actual image loading
+    rectIcon.Fill(Color(0, 255, 0)); // Green for the rectangle button
+    buttons.emplace_back(rectIcon, Vector2(start_x + (button_size + spacing) * 1, start_y), Vector2(button_size, button_size));
+
+    // Circle button
+    Image circleIcon(button_size, button_size); // Replace with your actual image loading
+    circleIcon.Fill(Color(255, 255, 0)); // Yellow for the circle button
+    buttons.emplace_back(circleIcon, Vector2(start_x + (button_size + spacing) * 2, start_y), Vector2(button_size, button_size));
+
+    // Triangle button
+    Image triangleIcon(button_size, button_size); // Replace with your actual image loading
+    triangleIcon.Fill(Color(255, 0, 255)); // Magenta for the triangle button
+    buttons.emplace_back(triangleIcon, Vector2(start_x + (button_size + spacing) * 3, start_y), Vector2(button_size, button_size));
+
+    // Add other buttons as needed (e.g., save, load, clear, etc.)
 }
+
