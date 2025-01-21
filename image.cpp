@@ -538,6 +538,8 @@ void Image::DrawCircle(int xc, int yc, int r, const Color& borderColor,int borde
 	if (borderWidth != 1) {
 		for (int i = 1; i <= borderWidth; i++) {
 			DrawCircle(xc, yc, r - i, borderColor, 1, false, fillColor);
+			DrawCircle(xc+1, yc, r - i, borderColor, 1, false, fillColor);
+			DrawCircle(xc, yc+1, r - i, borderColor, 1, false, fillColor);
 		}
 	}
 
