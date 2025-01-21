@@ -159,28 +159,50 @@ void Application::OnMouseButtonUp(SDL_MouseButtonEvent event) {
 void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
     if (event.button == SDL_BUTTON_LEFT) {
         for (size_t i = 0; i < buttons.size(); ++i) {
-                            if (buttons[i].IsMouseInside(mouse_position)) {
-                                std::cout << "Button " << i << " clicked!" << std::endl;
+            if (buttons[i].IsMouseInside(mouse_position)) {
+                std::cout << "Button " << i << " clicked!" << std::endl;
 
-                                // Assign actions based on the button index
-                                switch (i) {
-                                case 0: // First button (Line)
-                                    exercise = 1;
-                                    break;
-                                case 1: // Second button (Rectangle)
-                                    exercise = 2;
-                                    break;
-                                case 2: // First button (Line)
-                                    exercise = 3;
-                                    break;
-                                case 3: // Second button (Rectangle)
-                                    exercise = 4;
-                                    break;
-                                
-                                // Add other cases for additional buttons
-                                }
-                            }
-                        }
+                // Assign actions based on the button index
+                switch (i) {
+                    case 0: // Line button
+                        exercise = 1;
+                        break;
+                    case 1: // Rectangle button
+                        exercise = 2;
+                        break;
+                    case 2: // Circle button
+                        exercise = 3;
+                        break;
+                    case 3: // Triangle button
+                        exercise = 4;
+                        break;
+                    case 4: // Save Image button
+                        framebuffer.SaveTGA("saved_image.tga");
+                        std::cout << "Image saved as 'saved_image.tga'" << std::endl;
+                        break;
+                    case 5: // Load Image button
+                        framebuffer.LoadTGA("load_image.tga"); // Replace with your desired filename
+                        std::cout << "Image loaded from 'load_image.tga'" << std::endl;
+                        break;
+                    case 6: // Clear Image button
+                        framebuffer.Fill(Color(0, 0, 0)); // Clear framebuffer to black
+                        exercise = 1; // Set default tool to Line
+                        std::cout << "Framebuffer cleared. Default tool set to Line." << std::endl;
+                        break;
+
+
+
+                    case 7: // Eraser button
+                        selected_color = Color(0, 0, 0); // Set color to black (eraser effect)
+                        exercise = 1; // Use the line tool for erasing
+                        std::cout << "Eraser activated" << std::endl;
+                        break;
+                    default:
+                        break;
+                }
+                return; // Stop further processing as a button was clicked
+            }
+        }
         
         if (exercise == 1) { // Draw Line
             if (p1 == NULL) {
@@ -257,6 +279,11 @@ void Application::OnFileChanged(const char* filename)
 {
     Shader::ReloadSingleShader(filename);
 }
+
+Color Application::ChooseRandomColor() {
+    return Color(rand() % 256, rand() % 256, rand() % 256); // Random RGB values
+}
+
 void Application::InitButtons() {
     const int button_size = 32;   // Size of each button
     const int spacing = 20;      // Space between buttons
@@ -264,25 +291,44 @@ void Application::InitButtons() {
     const int start_y = 10;      // Starting y-coordinate for buttons
 
     // Line button
-    Image lineIcon(button_size, button_size); // Replace with your actual image loading
+    Image lineIcon(button_size, button_size);
     lineIcon.Fill(Color(0, 0, 255)); // Blue for the line button
     buttons.emplace_back(lineIcon, Vector2(start_x, start_y), Vector2(button_size, button_size));
 
     // Rectangle button
-    Image rectIcon(button_size, button_size); // Replace with your actual image loading
+    Image rectIcon(button_size, button_size);
     rectIcon.Fill(Color(0, 255, 0)); // Green for the rectangle button
     buttons.emplace_back(rectIcon, Vector2(start_x + (button_size + spacing) * 1, start_y), Vector2(button_size, button_size));
 
     // Circle button
-    Image circleIcon(button_size, button_size); // Replace with your actual image loading
+    Image circleIcon(button_size, button_size);
     circleIcon.Fill(Color(255, 255, 0)); // Yellow for the circle button
     buttons.emplace_back(circleIcon, Vector2(start_x + (button_size + spacing) * 2, start_y), Vector2(button_size, button_size));
 
     // Triangle button
-    Image triangleIcon(button_size, button_size); // Replace with your actual image loading
+    Image triangleIcon(button_size, button_size);
     triangleIcon.Fill(Color(255, 0, 255)); // Magenta for the triangle button
     buttons.emplace_back(triangleIcon, Vector2(start_x + (button_size + spacing) * 3, start_y), Vector2(button_size, button_size));
 
-    // Add other buttons as needed (e.g., save, load, clear, etc.)
-}
+    // Save Image button
+    Image saveIcon(button_size, button_size);
+    saveIcon.Fill(Color(255, 165, 0)); // Orange for the save button
+    buttons.emplace_back(saveIcon, Vector2(start_x + (button_size + spacing) * 4, start_y), Vector2(button_size, button_size));
 
+    // Load Image button
+    Image loadIcon(button_size, button_size);
+    loadIcon.Fill(Color(128, 0, 128)); // Purple for the load button
+    buttons.emplace_back(loadIcon, Vector2(start_x + (button_size + spacing) * 5, start_y), Vector2(button_size, button_size));
+
+    // Clear Image button
+    Image clearIcon(button_size, button_size);
+    clearIcon.Fill(Color(192, 192, 192)); // Gray for the clear button
+    buttons.emplace_back(clearIcon, Vector2(start_x + (button_size + spacing) * 6, start_y), Vector2(button_size, button_size));
+
+    // Eraser button
+    Image eraserIcon(button_size, button_size);
+    eraserIcon.Fill(Color(255, 20, 147)); // Pink for the eraser button
+    buttons.emplace_back(eraserIcon, Vector2(start_x + (button_size + spacing) * 7, start_y), Vector2(button_size, button_size));
+
+    // Add other buttons as needed
+}
