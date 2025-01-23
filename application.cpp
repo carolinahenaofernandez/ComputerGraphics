@@ -159,7 +159,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 
     case SDLK_6: // Press '6' to toggle the particle system
         if (particleSystemActive) {
-            framebuffer.Fill(Color(0, 0, 0)); // Clear the screen
+			framebuffer.Fill(Color(0, 0, 0)); // Clear the screen
         }
         particleSystemActive = !particleSystemActive;
         std::cout << "Particle system " << (particleSystemActive ? "activated" : "deactivated") << std::endl;
@@ -325,7 +325,7 @@ Color Application::ChooseRandomColor() {
 }
 
 void Application::InitButtons() {
-
+  
 }
 
 void ParticleSystem::Init() {
