@@ -208,60 +208,75 @@ void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
                 std::cout << "Button " << i << " clicked!" << std::endl;
 
                 // Handle actions based on the button index
-                switch (i) {
-                    case 0: // Clear Image button
-                        framebuffer.Fill(Color(0, 0, 0)); // Clear framebuffer to black
-                        std::cout << "Framebuffer cleared." << std::endl;
-                        break;
+                if (i >= 9 && i <= 15) { // Color buttons (adjust indices as needed)
+                    switch (i) {
+                        case 9:  selected_color = Color(0, 0, 0);    break; // Black
+                        case 10: selected_color = Color(255, 255, 255); break; // White
+                        case 11: selected_color = Color(255, 192, 203); break; // Pink
+                        case 12: selected_color = Color(255, 255, 0);   break; // Yellow
+                        case 13: selected_color = Color(255, 0, 0);     break; // Red
+                        case 14: selected_color = Color(0, 0, 255);     break; // Blue
+                        case 15: selected_color = Color(0, 255, 255);   break; // Cyan
+                    }
+                    std::cout << "Color changed to (" << selected_color.r << ", "
+                              << selected_color.g << ", " << selected_color.b << ")" << std::endl;
+                } else {
+                    // Handle other buttons (tools, actions, etc.)
+                    switch (i) {
+                        case 0: // Clear Image button
+                            framebuffer.Fill(Color(0, 0, 0));
+                            std::cout << "Framebuffer cleared." << std::endl;
+                            break;
 
-                    case 1: // Load Image button
-                        framebuffer.LoadTGA("load_image.tga"); // Replace with the desired filename
-                        std::cout << "Image loaded from 'load_image.tga'." << std::endl;
-                        break;
+                        case 1: // Load Image button
+                            framebuffer.LoadTGA("load_image.tga");
+                            std::cout << "Image loaded from 'load_image.tga'." << std::endl;
+                            break;
 
-                    case 2: // Save Image button
-                        framebuffer.SaveTGA("saved_image.tga");
-                        std::cout << "Image saved as 'saved_image.tga'." << std::endl;
-                        break;
+                        case 2: // Save Image button
+                            framebuffer.SaveTGA("saved_image.tga");
+                            std::cout << "Image saved as 'saved_image.tga'." << std::endl;
+                            break;
 
-                    case 3: // Eraser button
-                        selected_color = Color(0, 0, 0); // Set color to black (eraser effect)
-                        exercise = 1; // Use the line tool for erasing
-                        std::cout << "Eraser activated." << std::endl;
-                        break;
+                        case 3: // Eraser button
+                            selected_color = Color(0, 0, 0); // Black (eraser effect)
+                            exercise = 1;
+                            std::cout << "Eraser activated." << std::endl;
+                            break;
 
-                    case 4: // Pencil button
-                        selected_color = Color(255, 255, 255); // Set color to white
-                        exercise = 1; // Use the line tool for drawing
-                        std::cout << "Pencil activated." << std::endl;
-                        break;
+                        case 4: // Pencil button
+                            selected_color = Color(255, 255, 255); // White
+                            exercise = 1;
+                            std::cout << "Pencil activated." << std::endl;
+                            break;
 
-                    case 5: // Line tool button
-                        exercise = 1; // Activate line tool
-                        std::cout << "Line tool activated." << std::endl;
-                        break;
+                        case 5: // Line tool button
+                            exercise = 1;
+                            std::cout << "Line tool activated." << std::endl;
+                            break;
 
-                    case 6: // Rectangle tool button
-                        exercise = 2; // Activate rectangle tool
-                        std::cout << "Rectangle tool activated." << std::endl;
-                        break;
+                        case 6: // Rectangle tool button
+                            exercise = 2;
+                            std::cout << "Rectangle tool activated." << std::endl;
+                            break;
 
-                    case 7: // Circle tool button
-                        exercise = 3; // Activate circle tool
-                        std::cout << "Circle tool activated." << std::endl;
-                        break;
+                        case 7: // Circle tool button
+                            exercise = 3;
+                            std::cout << "Circle tool activated." << std::endl;
+                            break;
 
-                    case 8: // Triangle tool button
-                        exercise = 4; // Activate triangle tool
-                        std::cout << "Triangle tool activated." << std::endl;
-                        break;
+                        case 8: // Triangle tool button
+                            exercise = 4;
+                            std::cout << "Triangle tool activated." << std::endl;
+                            break;
 
-                    default:
-                        std::cout << "No action assigned to button " << i << "." << std::endl;
-                        break;
+                        default:
+                            std::cout << "No action assigned to button " << i << "." << std::endl;
+                            break;
+                    }
                 }
 
-                return; // Stop further processing once a button is clicked
+                return; // Stop further processing as a button was clicked
             }
         }
 
@@ -308,7 +323,8 @@ void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
                 Vector2* p3 = new Vector2(mouse_position.x, mouse_position.y); // Third vertex
                 framebuffer.DrawTriangle(*p1, *p2, *p3, selected_color, isFilled, selected_color);
                 delete p1; delete p2; delete p3;
-                p1 = nullptr; p2 = nullptr;
+                p1 = nullptr;
+                p2 = nullptr;
             }
         }
     }
