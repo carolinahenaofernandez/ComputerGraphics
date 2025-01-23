@@ -39,7 +39,7 @@ public:
     void DrawLineDDA(int x0, int y0, int x1, int y1, const Color& color);
     void DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled = false, const Color& fillColor = Color::BLACK);
     void DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor);
-    void DrawCircle(int x, int y, int r, const Color& borderColor, int borderWidth, bool isFilled= false, const Color& fillColor = Color::BLACK);
+    void DrawCircle(int x, int y, int r, const Color& borderColor, int borderWidth, bool isFilled = false, const Color& fillColor = Color::BLACK);
     void ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<std::pair<int, int>>& table, int minY);
     void DrawImage(const Image& image, int x, int y);
 
@@ -73,8 +73,8 @@ public:
     void Resize(unsigned int width, unsigned int height);
     void Scale(unsigned int width, unsigned int height);
 
-    void FlipY(); // Flip the image top-down
-
+    void FlipY(); // Flip 
+	void FlipX(); 
     // Fill the image with the color C
     void Fill(const Color& c) { for (unsigned int pos = 0; pos < width * height; ++pos) pixels[pos] = c; }
 
@@ -83,7 +83,7 @@ public:
 
     // Save or load images from the hard drive
     bool LoadPNG(const char* filename, bool flip_y = true);
-    bool LoadTGA(const char* filename, bool flip_y = false);
+    bool LoadTGA(const char* filename, bool flip_y = false, bool flip_x = true);
     bool SaveTGA(const char* filename);
 
     // Used to easy code
