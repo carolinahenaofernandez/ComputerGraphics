@@ -28,6 +28,7 @@ Application::~Application()
 void Application::Init(void)
 {
     std::cout << "Initiating app..." << std::endl;
+    InitButtons();
     particleSystem.Init();
 }
 
@@ -37,13 +38,11 @@ int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
 
 void Application::Render(void) {
     for (const Button& button : buttons) {
-        button.Render(framebuffer);
-    }
-    // Render the particle system only if active
+            button.Render(framebuffer);
+        }
     if (particleSystemActive) {
         particleSystem.Render(&framebuffer);
     }
-
 
     // Only render when shouldRender is true
     if (shouldRender) {
@@ -66,16 +65,16 @@ void Application::Render(void) {
             framebuffer.DrawTriangle(Vector2(startX, startY), Vector2((startX + endX) / 2, endY), Vector2(endX, startY), Color(255, 255, 0), false, Color(0, 255, 0));
             break;
         }
-
-        case 5: // Drawing tool
-            if (buttonsstate) {
-                for (const Button& button : buttons) {
-                    button.Render(framebuffer);
+                
+            case 5: //Drawing tool
+                if (buttonsstate) {
+                    for (const Button& button : buttons) {
+                        button.Render(framebuffer);
+                    }
                 }
-            }
-            break;
+                break;
 
-
+                
         default:
             std::cout << "No action for exercise " << exercise << std::endl;
             break;
@@ -124,10 +123,33 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
         exercise = 3; // Draw Circle
         std::cout << "Exercise 3: Draw Circle" << std::endl;
         break;
-
+        
     case SDLK_4:
         exercise = 4; // Draw Circle
         std::cout << "Exercise 4: Draw Triangle" << std::endl;
+        break;
+            
+    case SDLK_5:
+        exercise = 5;
+        buttonsstate = !buttonsstate;
+            std::cout << "Exercise 5: Drawing Tool " << (buttonsstate ? "enabled" : "disabled") << std::endl;
+
+
+        if (buttonsstate) {
+            InitButtons();
+        }
+        else {
+            framebuffer.Fill(Color(0, 0, 0));
+            buttons.clear();
+        }
+        break;
+    
+        case SDLK_6:
+        if (particleSystemActive) {
+            framebuffer.Fill(Color(0, 0, 0));
+        }
+        particleSystemActive = !particleSystemActive;
+        std::cout << "Particle system " << (particleSystemActive ? "activated" : "deactivated") << std::endl;
         break;
 
 
@@ -140,29 +162,6 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
             isFilled = true;
             std::cout << "Filling ON" << std::endl;
         }
-        break;
-
-    case SDLK_5:
-        exercise = 5; // Toggle Drawing Tool
-        buttonsstate = !buttonsstate;
-        std::cout << "Exercise 5: Drawing Tool " << (buttonsstate ? "enabled" : "disabled") << std::endl;
-
-        // Initialize or clear buttons based on state
-        if (buttonsstate) {
-            InitButtons();
-        }
-        else {
-            framebuffer.Fill(Color(0, 0, 0)); // Clear the screen
-            buttons.clear(); // Clear buttons from the vector
-        }
-        break;
-
-    case SDLK_6: // Press '6' to toggle the particle system
-        if (particleSystemActive) {
-			framebuffer.Fill(Color(0, 0, 0)); // Clear the screen
-        }
-        particleSystemActive = !particleSystemActive;
-        std::cout << "Particle system " << (particleSystemActive ? "activated" : "deactivated") << std::endl;
         break;
 
     case SDLK_PLUS: // Increase border width
@@ -204,44 +203,43 @@ void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
 
                 // Assign actions based on the button index
                 switch (i) {
-                case 0: // Line button
-                    exercise = 1;
-                    break;
-                case 1: // Rectangle button
-                    exercise = 2;
-                    break;
-                case 2: // Circle button
-                    exercise = 3;
-                    break;
-                case 3: // Triangle button
-                    exercise = 4;
-                    break;
-                case 4: // Save Image button
-                    framebuffer.SaveTGA("saved_image.tga");
-                    std::cout << "Image saved as 'saved_image.tga'" << std::endl;
-                    break;
-                case 5: // Load Image button
-                    framebuffer.LoadTGA("load_image.tga"); // Replace with your desired filename
-                    std::cout << "Image loaded from 'load_image.tga'" << std::endl;
-                    break;
-                case 6: // Clear Image button
-                    framebuffer.Fill(Color(0, 0, 0)); // Clear framebuffer to black
-                    exercise = 1; // Set default tool to Line
-                    std::cout << "Framebuffer cleared. Default tool set to Line." << std::endl;
-                    break;
-
-                case 7: // Eraser button
-                    selected_color = Color(0, 0, 0); // Set color to black (eraser effect)
-                    exercise = 1; // Use the line tool for erasing
-                    std::cout << "Eraser activated" << std::endl;
-                    break;
-                default:
-                    break;
+                    case 0: // Line button
+                        exercise = 1;
+                        break;
+                    case 1: // Rectangle button
+                        exercise = 2;
+                        break;
+                    case 2: // Circle button
+                        exercise = 3;
+                        break;
+                    case 3: // Triangle button
+                        exercise = 4;
+                        break;
+                    case 4: // Save Image button
+                        framebuffer.SaveTGA("saved_image.tga");
+                        std::cout << "Image saved as 'saved_image.tga'" << std::endl;
+                        break;
+                    case 5: // Load Image button
+                        framebuffer.LoadTGA("load_image.tga"); // Replace with your desired filename
+                        std::cout << "Image loaded from 'load_image.tga'" << std::endl;
+                        break;
+                    case 6: // Clear Image button
+                        framebuffer.Fill(Color(0, 0, 0)); // Clear framebuffer to black
+                        exercise = 1; // Set default tool to Line
+                        std::cout << "Framebuffer cleared. Default tool set to Line." << std::endl;
+                        break;
+                    case 7: // Eraser button
+                        selected_color = Color(0, 0, 0); // Set color to black (eraser effect)
+                        exercise = 1; // Use the line tool for erasing
+                        std::cout << "Eraser activated" << std::endl;
+                        break;
+                    default:
+                        break;
                 }
                 return; // Stop further processing as a button was clicked
             }
         }
-
+        
         if (exercise == 1) { // Draw Line
             if (p1 == NULL) {
                 p1 = new Vector2(mouse_position.x, mouse_position.y); // First point
@@ -287,11 +285,9 @@ void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
         else if (exercise == 4) { // Draw Triangle
             if (p1 == NULL) {
                 p1 = new Vector2(mouse_position.x, mouse_position.y); // First vertex
-            }
-            else if (p2 == NULL) {
+            } else if (p2 == NULL) {
                 p2 = new Vector2(mouse_position.x, mouse_position.y); // Second vertex
-            }
-            else {
+            } else {
                 Vector2* p3 = new Vector2(mouse_position.x, mouse_position.y); // Third vertex
                 framebuffer.DrawTriangle(*p1, *p2, *p3, selected_color, isFilled, selected_color); // Draw triangle
                 delete p1; delete p2; delete p3; // Free memory
@@ -325,9 +321,53 @@ Color Application::ChooseRandomColor() {
 }
 
 void Application::InitButtons() {
-  
-}
+    const int button_size = 32;   // Size of each button
+    const int spacing = 20;      // Space between buttons
+    const int start_x = 10;      // Starting x-coordinate for buttons
+    const int start_y = 10;      // Starting y-coordinate for buttons
 
+    // Line button
+    Image lineIcon(button_size, button_size);
+    lineIcon.Fill(Color(0, 0, 255)); // Blue for the line button
+    buttons.emplace_back(lineIcon, Vector2(start_x, start_y), Vector2(button_size, button_size));
+
+    // Rectangle button
+    Image rectIcon(button_size, button_size);
+    rectIcon.Fill(Color(0, 255, 0)); // Green for the rectangle button
+    buttons.emplace_back(rectIcon, Vector2(start_x + (button_size + spacing) * 1, start_y), Vector2(button_size, button_size));
+
+    // Circle button
+    Image circleIcon(button_size, button_size);
+    circleIcon.Fill(Color(255, 255, 0)); // Yellow for the circle button
+    buttons.emplace_back(circleIcon, Vector2(start_x + (button_size + spacing) * 2, start_y), Vector2(button_size, button_size));
+
+    // Triangle button
+    Image triangleIcon(button_size, button_size);
+    triangleIcon.Fill(Color(255, 0, 255)); // Magenta for the triangle button
+    buttons.emplace_back(triangleIcon, Vector2(start_x + (button_size + spacing) * 3, start_y), Vector2(button_size, button_size));
+
+    // Save Image button
+    Image saveIcon(button_size, button_size);
+    saveIcon.Fill(Color(255, 165, 0)); // Orange for the save button
+    buttons.emplace_back(saveIcon, Vector2(start_x + (button_size + spacing) * 4, start_y), Vector2(button_size, button_size));
+
+    // Load Image button
+    Image loadIcon(button_size, button_size);
+    loadIcon.Fill(Color(128, 0, 128)); // Purple for the load button
+    buttons.emplace_back(loadIcon, Vector2(start_x + (button_size + spacing) * 5, start_y), Vector2(button_size, button_size));
+
+    // Clear Image button
+    Image clearIcon(button_size, button_size);
+    clearIcon.Fill(Color(192, 192, 192)); // Gray for the clear button
+    buttons.emplace_back(clearIcon, Vector2(start_x + (button_size + spacing) * 6, start_y), Vector2(button_size, button_size));
+
+    // Eraser button
+    Image eraserIcon(button_size, button_size);
+    eraserIcon.Fill(Color(255, 20, 147)); // Pink for the eraser button
+    buttons.emplace_back(eraserIcon, Vector2(start_x + (button_size + spacing) * 7, start_y), Vector2(button_size, button_size));
+
+    // Add other buttons as needed
+}
 void ParticleSystem::Init() {
     for (int i = 0; i < MAX_PARTICLES; ++i) {
         particles[i].inactive = true; // Start as inactive
