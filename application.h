@@ -121,4 +121,3 @@ public:
         return Vector2(float(w), float(h));
     }
 };
-
