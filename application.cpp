@@ -28,6 +28,7 @@ Application::~Application()
 void Application::Init(void)
 {
     std::cout << "Initiating app..." << std::endl;
+    particleSystem.Init();
 }
 
 int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
@@ -35,7 +36,14 @@ int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
 }
 
 void Application::Render(void) {
-    // Clear the framebuffer
+    for (const Button& button : buttons) {
+        button.Render(framebuffer);
+    }
+    // Render the particle system only if active
+    if (particleSystemActive) {
+        particleSystem.Render(&framebuffer);
+    }
+
 
     // Only render when shouldRender is true
     if (shouldRender) {
@@ -59,6 +67,13 @@ void Application::Render(void) {
             break;
         }
 
+        case 5: // Drawing tool
+            if (buttonsstate) {
+                for (const Button& button : buttons) {
+                    button.Render(framebuffer);
+                }
+            }
+            break;
 
 
         default:
@@ -81,10 +96,14 @@ void Application::Render(void) {
 // Called after render
 void Application::Update(float seconds_elapsed)
 {
+    if (particleSystemActive) {
+        particleSystem.Update(seconds_elapsed);
+    }
 
 }
 bool isFilled = false;
 int borderWidth = 1;
+bool buttonsstate = false;
 //keyboard press event
 void Application::OnKeyPressed(SDL_KeyboardEvent event)
 {
@@ -105,7 +124,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
         exercise = 3; // Draw Circle
         std::cout << "Exercise 3: Draw Circle" << std::endl;
         break;
-        
+
     case SDLK_4:
         exercise = 4; // Draw Circle
         std::cout << "Exercise 4: Draw Triangle" << std::endl;
@@ -121,6 +140,29 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
             isFilled = true;
             std::cout << "Filling ON" << std::endl;
         }
+        break;
+
+    case SDLK_5:
+        exercise = 5; // Toggle Drawing Tool
+        buttonsstate = !buttonsstate;
+        std::cout << "Exercise 5: Drawing Tool " << (buttonsstate ? "enabled" : "disabled") << std::endl;
+
+        // Initialize or clear buttons based on state
+        if (buttonsstate) {
+            InitButtons();
+        }
+        else {
+            framebuffer.Fill(Color(0, 0, 0)); // Clear the screen
+            buttons.clear(); // Clear buttons from the vector
+        }
+        break;
+
+    case SDLK_6: // Press '6' to toggle the particle system
+        if (particleSystemActive) {
+            framebuffer.Fill(Color(0, 0, 0)); // Clear the screen
+        }
+        particleSystemActive = !particleSystemActive;
+        std::cout << "Particle system " << (particleSystemActive ? "activated" : "deactivated") << std::endl;
         break;
 
     case SDLK_PLUS: // Increase border width
@@ -156,6 +198,50 @@ void Application::OnMouseButtonUp(SDL_MouseButtonEvent event) {
 
 void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
     if (event.button == SDL_BUTTON_LEFT) {
+        for (size_t i = 0; i < buttons.size(); ++i) {
+            if (buttons[i].IsMouseInside(mouse_position)) {
+                std::cout << "Button " << i << " clicked!" << std::endl;
+
+                // Assign actions based on the button index
+                switch (i) {
+                case 0: // Line button
+                    exercise = 1;
+                    break;
+                case 1: // Rectangle button
+                    exercise = 2;
+                    break;
+                case 2: // Circle button
+                    exercise = 3;
+                    break;
+                case 3: // Triangle button
+                    exercise = 4;
+                    break;
+                case 4: // Save Image button
+                    framebuffer.SaveTGA("saved_image.tga");
+                    std::cout << "Image saved as 'saved_image.tga'" << std::endl;
+                    break;
+                case 5: // Load Image button
+                    framebuffer.LoadTGA("load_image.tga"); // Replace with your desired filename
+                    std::cout << "Image loaded from 'load_image.tga'" << std::endl;
+                    break;
+                case 6: // Clear Image button
+                    framebuffer.Fill(Color(0, 0, 0)); // Clear framebuffer to black
+                    exercise = 1; // Set default tool to Line
+                    std::cout << "Framebuffer cleared. Default tool set to Line." << std::endl;
+                    break;
+
+                case 7: // Eraser button
+                    selected_color = Color(0, 0, 0); // Set color to black (eraser effect)
+                    exercise = 1; // Use the line tool for erasing
+                    std::cout << "Eraser activated" << std::endl;
+                    break;
+                default:
+                    break;
+                }
+                return; // Stop further processing as a button was clicked
+            }
+        }
+
         if (exercise == 1) { // Draw Line
             if (p1 == NULL) {
                 p1 = new Vector2(mouse_position.x, mouse_position.y); // First point
@@ -201,9 +287,11 @@ void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
         else if (exercise == 4) { // Draw Triangle
             if (p1 == NULL) {
                 p1 = new Vector2(mouse_position.x, mouse_position.y); // First vertex
-            } else if (p2 == NULL) {
+            }
+            else if (p2 == NULL) {
                 p2 = new Vector2(mouse_position.x, mouse_position.y); // Second vertex
-            } else {
+            }
+            else {
                 Vector2* p3 = new Vector2(mouse_position.x, mouse_position.y); // Third vertex
                 framebuffer.DrawTriangle(*p1, *p2, *p3, selected_color, isFilled, selected_color); // Draw triangle
                 delete p1; delete p2; delete p3; // Free memory
@@ -230,4 +318,81 @@ void Application::OnWheel(SDL_MouseWheelEvent event)
 void Application::OnFileChanged(const char* filename)
 {
     Shader::ReloadSingleShader(filename);
+}
+
+Color Application::ChooseRandomColor() {
+    return Color(rand() % 256, rand() % 256, rand() % 256); // Random RGB values
+}
+
+void Application::InitButtons() {
+
+}
+
+void ParticleSystem::Init() {
+    for (int i = 0; i < MAX_PARTICLES; ++i) {
+        particles[i].inactive = true; // Start as inactive
+    }
+}
+
+void ParticleSystem::Update(float dt) {
+    const int screenWidth = 1280;  // Screen width
+    const int screenHeight = 720; // Screen height
+
+    for (int i = 0; i < MAX_PARTICLES; ++i) {
+        if (particles[i].inactive) {
+            // Respawn particle if inactive
+            particles[i].position = Vector2(rand() % screenWidth, rand() % screenHeight); // Random spawn
+            particles[i].velocity = Vector2((rand() % 200 - 100) / 100.0f, (rand() % 200 - 100) / 100.0f); // Random velocity
+            particles[i].color = Color(rand() % 256, rand() % 256, rand() % 256); // Random color
+            particles[i].ttl = 0.0f; // Reset lifetime
+            particles[i].inactive = false;
+        }
+
+        // Update active particles
+        if (!particles[i].inactive) {
+            particles[i].ttl += dt; // Increment lifetime
+            if (particles[i].ttl >= 120.0f) { // Reactivate after 120 second
+                particles[i].inactive = true;
+            }
+
+            // Update position
+            particles[i].position.x += particles[i].velocity.x * dt * 100.0f;
+            particles[i].position.y += particles[i].velocity.y * dt * 100.0f;
+
+            // Wrap-around bounds
+            if (particles[i].position.x < 0) particles[i].position.x += screenWidth;
+            if (particles[i].position.x >= screenWidth) particles[i].position.x -= screenWidth;
+            if (particles[i].position.y < 0) particles[i].position.y += screenHeight;
+            if (particles[i].position.y >= screenHeight) particles[i].position.y -= screenHeight;
+        }
+    }
+}
+
+void ParticleSystem::Render(Image* framebuffer) {
+    // Clear the framebuffer to black
+    framebuffer->Fill(Color(0, 0, 0));
+
+    const int particleSize = 5; // Size of the particle (width and height of the square)
+
+    // Render all active particles
+    for (int i = 0; i < MAX_PARTICLES; ++i) {
+        if (!particles[i].inactive) {
+            // Draw a square for each particle
+            int x = static_cast<int>(particles[i].position.x);
+            int y = static_cast<int>(particles[i].position.y);
+
+            // Draw a filled square (use a loop to simulate a larger particle)
+            for (int dx = -particleSize / 2; dx <= particleSize / 2; ++dx) {
+                for (int dy = -particleSize / 2; dy <= particleSize / 2; ++dy) {
+                    int drawX = x + dx;
+                    int drawY = y + dy;
+
+                    // Check bounds to avoid out-of-framebuffer access
+                    if (drawX >= 0 && drawX < framebuffer->width && drawY >= 0 && drawY < framebuffer->height) {
+                        framebuffer->SetPixel(drawX, drawY, particles[i].color);
+                    }
+                }
+            }
+        }
+    }
 }
