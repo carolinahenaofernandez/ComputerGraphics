@@ -30,6 +30,7 @@ void Application::Init(void)
     std::cout << "Initiating app..." << std::endl;
     InitButtons();
     particleSystem.Init();
+    
 }
 
 int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
@@ -197,105 +198,122 @@ void Application::OnMouseButtonUp(SDL_MouseButtonEvent event) {
 
 void Application::OnMouseButtonDown(SDL_MouseButtonEvent event) {
     if (event.button == SDL_BUTTON_LEFT) {
+        // Log the mouse position for debugging
+        Vector2 mousePosition(mouse_position.x, mouse_position.y);
+        std::cout << "Mouse clicked at (" << mousePosition.x << ", " << mousePosition.y << ")" << std::endl;
+
+        // Iterate through all buttons
         for (size_t i = 0; i < buttons.size(); ++i) {
-            if (buttons[i].IsMouseInside(mouse_position)) {
+            if (buttons[i].IsMouseInside(mousePosition)) {
                 std::cout << "Button " << i << " clicked!" << std::endl;
 
-                // Assign actions based on the button index
+                // Handle actions based on the button index
                 switch (i) {
-                    case 0: // Line button
-                        exercise = 1;
-                        break;
-                    case 1: // Rectangle button
-                        exercise = 2;
-                        break;
-                    case 2: // Circle button
-                        exercise = 3;
-                        break;
-                    case 3: // Triangle button
-                        exercise = 4;
-                        break;
-                    case 4: // Save Image button
-                        framebuffer.SaveTGA("saved_image.tga");
-                        std::cout << "Image saved as 'saved_image.tga'" << std::endl;
-                        break;
-                    case 5: // Load Image button
-                        framebuffer.LoadTGA("load_image.tga"); // Replace with your desired filename
-                        std::cout << "Image loaded from 'load_image.tga'" << std::endl;
-                        break;
-                    case 6: // Clear Image button
+                    case 0: // Clear Image button
                         framebuffer.Fill(Color(0, 0, 0)); // Clear framebuffer to black
-                        exercise = 1; // Set default tool to Line
-                        std::cout << "Framebuffer cleared. Default tool set to Line." << std::endl;
+                        std::cout << "Framebuffer cleared." << std::endl;
                         break;
-                    case 7: // Eraser button
+
+                    case 1: // Load Image button
+                        framebuffer.LoadTGA("load_image.tga"); // Replace with the desired filename
+                        std::cout << "Image loaded from 'load_image.tga'." << std::endl;
+                        break;
+
+                    case 2: // Save Image button
+                        framebuffer.SaveTGA("saved_image.tga");
+                        std::cout << "Image saved as 'saved_image.tga'." << std::endl;
+                        break;
+
+                    case 3: // Eraser button
                         selected_color = Color(0, 0, 0); // Set color to black (eraser effect)
                         exercise = 1; // Use the line tool for erasing
-                        std::cout << "Eraser activated" << std::endl;
+                        std::cout << "Eraser activated." << std::endl;
                         break;
+
+                    case 4: // Pencil button
+                        selected_color = Color(255, 255, 255); // Set color to white
+                        exercise = 1; // Use the line tool for drawing
+                        std::cout << "Pencil activated." << std::endl;
+                        break;
+
+                    case 5: // Line tool button
+                        exercise = 1; // Activate line tool
+                        std::cout << "Line tool activated." << std::endl;
+                        break;
+
+                    case 6: // Rectangle tool button
+                        exercise = 2; // Activate rectangle tool
+                        std::cout << "Rectangle tool activated." << std::endl;
+                        break;
+
+                    case 7: // Circle tool button
+                        exercise = 3; // Activate circle tool
+                        std::cout << "Circle tool activated." << std::endl;
+                        break;
+
+                    case 8: // Triangle tool button
+                        exercise = 4; // Activate triangle tool
+                        std::cout << "Triangle tool activated." << std::endl;
+                        break;
+
                     default:
+                        std::cout << "No action assigned to button " << i << "." << std::endl;
                         break;
                 }
-                return; // Stop further processing as a button was clicked
+
+                return; // Stop further processing once a button is clicked
             }
         }
-        
+
+        // Handle drawing operations if no button was clicked
         if (exercise == 1) { // Draw Line
-            if (p1 == NULL) {
+            if (!p1) {
                 p1 = new Vector2(mouse_position.x, mouse_position.y); // First point
-            }
-            else {
+            } else {
                 p2 = new Vector2(mouse_position.x, mouse_position.y); // Second point
-                framebuffer.DrawLineDDA(p1->x, p1->y, p2->x, p2->y, selected_color); // Draw line
-                delete p1; // Free memory
-                delete p2;
-                p1 = NULL;
-                p2 = NULL;
+                framebuffer.DrawLineDDA(p1->x, p1->y, p2->x, p2->y, selected_color); // Draw the line
+                delete p1; delete p2;
+                p1 = nullptr;
+                p2 = nullptr;
             }
-        }
-        else if (exercise == 2) { // Draw Rectangle
-            if (p1 == NULL) {
+        } else if (exercise == 2) { // Draw Rectangle
+            if (!p1) {
                 p1 = new Vector2(mouse_position.x, mouse_position.y); // First corner
-            }
-            else {
+            } else {
                 p2 = new Vector2(mouse_position.x, mouse_position.y); // Opposite corner
                 int width = p2->x - p1->x;
                 int height = p2->y - p1->y;
-                framebuffer.DrawRect(p1->x, p1->y, width, height, selected_color, borderWidth, isFilled, selected_color); // Draw rectangle
-                delete p1; // Free memory
-                delete p2;
-                p1 = NULL;
-                p2 = NULL;
+                framebuffer.DrawRect(p1->x, p1->y, width, height, selected_color, borderWidth, isFilled, selected_color);
+                delete p1; delete p2;
+                p1 = nullptr;
+                p2 = nullptr;
             }
-        }
-        else if (exercise == 3) { // Draw Circle
-            if (p1 == NULL) {
-                p1 = new Vector2(mouse_position.x, mouse_position.y); // Center of the circle
-            }
-            else {
+        } else if (exercise == 3) { // Draw Circle
+            if (!p1) {
+                p1 = new Vector2(mouse_position.x, mouse_position.y); // Circle center
+            } else {
                 p2 = new Vector2(mouse_position.x, mouse_position.y); // Point on the perimeter
-                int radius = static_cast<int>(sqrt(pow(p2->x - p1->x, 2) + pow(p2->y - p1->y, 2))); // Calculate radius
+                int radius = static_cast<int>(sqrt(pow(p2->x - p1->x, 2) + pow(p2->y - p1->y, 2))); // Compute radius
                 framebuffer.DrawCircle(p1->x, p1->y, radius, selected_color, borderWidth, isFilled, selected_color);
-                delete p1; // Free memory
-                delete p2;
-                p1 = NULL;
-                p2 = NULL;
+                delete p1; delete p2;
+                p1 = nullptr;
+                p2 = nullptr;
             }
-        }
-        else if (exercise == 4) { // Draw Triangle
-            if (p1 == NULL) {
+        } else if (exercise == 4) { // Draw Triangle
+            if (!p1) {
                 p1 = new Vector2(mouse_position.x, mouse_position.y); // First vertex
-            } else if (p2 == NULL) {
+            } else if (!p2) {
                 p2 = new Vector2(mouse_position.x, mouse_position.y); // Second vertex
             } else {
                 Vector2* p3 = new Vector2(mouse_position.x, mouse_position.y); // Third vertex
-                framebuffer.DrawTriangle(*p1, *p2, *p3, selected_color, isFilled, selected_color); // Draw triangle
-                delete p1; delete p2; delete p3; // Free memory
-                p1 = NULL; p2 = NULL;
+                framebuffer.DrawTriangle(*p1, *p2, *p3, selected_color, isFilled, selected_color);
+                delete p1; delete p2; delete p3;
+                p1 = nullptr; p2 = nullptr;
             }
         }
     }
 }
+
 
 
 
@@ -321,53 +339,53 @@ Color Application::ChooseRandomColor() {
 }
 
 void Application::InitButtons() {
-    const int button_size = 32;   // Size of each button
-    const int spacing = 20;      // Space between buttons
-    const int start_x = 10;      // Starting x-coordinate for buttons
-    const int start_y = 10;      // Starting y-coordinate for buttons
+    const int button_spacing = 10;   // Space between buttons
+    const int start_x = 10;          // Starting x-coordinate for buttons
+    const int start_y = 10;          // Starting y-coordinate for buttons
 
-    // Line button
-    Image lineIcon(button_size, button_size);
-    lineIcon.Fill(Color(0, 0, 255)); // Blue for the line button
-    buttons.emplace_back(lineIcon, Vector2(start_x, start_y), Vector2(button_size, button_size));
+    const char* imagePaths[numButtons] = {
+        "images/clear.png",
+        "images/load.png",
+        "images/save.png",
+        "images/eraser.png",
+        "images/pencil.png",
+        "images/line.png",
+        "images/rectangle.png",
+        "images/circle.png",
+        "images/triangle.png",
+        "images/black.png",
+        "images/white.png",
+        "images/pink.png",
+        "images/yellow.png",
+        "images/red.png",
+        "images/blue.png",
+        "images/cyan.png"
+    };
 
-    // Rectangle button
-    Image rectIcon(button_size, button_size);
-    rectIcon.Fill(Color(0, 255, 0)); // Green for the rectangle button
-    buttons.emplace_back(rectIcon, Vector2(start_x + (button_size + spacing) * 1, start_y), Vector2(button_size, button_size));
+    int current_x = start_x;
+    for (int i = 0; i < numButtons; ++i) {
+        Image* buttonImage = new Image();
+        if (!buttonImage->LoadPNG(imagePaths[i])) {
+            std::cout << "Image not found: " << imagePaths[i] << std::endl;
+            delete buttonImage;
+            continue;
+        }
 
-    // Circle button
-    Image circleIcon(button_size, button_size);
-    circleIcon.Fill(Color(255, 255, 0)); // Yellow for the circle button
-    buttons.emplace_back(circleIcon, Vector2(start_x + (button_size + spacing) * 2, start_y), Vector2(button_size, button_size));
+        // Define position and size for the button
+        Vector2 buttonPosition(current_x, start_y);
+        Vector2 buttonSize(buttonImage->width, buttonImage->height);
 
-    // Triangle button
-    Image triangleIcon(button_size, button_size);
-    triangleIcon.Fill(Color(255, 0, 255)); // Magenta for the triangle button
-    buttons.emplace_back(triangleIcon, Vector2(start_x + (button_size + spacing) * 3, start_y), Vector2(button_size, button_size));
+        // Create a button and add it to the buttons list
+        buttons.emplace_back(*buttonImage, buttonPosition, buttonSize);
 
-    // Save Image button
-    Image saveIcon(button_size, button_size);
-    saveIcon.Fill(Color(255, 165, 0)); // Orange for the save button
-    buttons.emplace_back(saveIcon, Vector2(start_x + (button_size + spacing) * 4, start_y), Vector2(button_size, button_size));
+        // Advance the x-coordinate for the next button
+        current_x += buttonImage->width + button_spacing;
 
-    // Load Image button
-    Image loadIcon(button_size, button_size);
-    loadIcon.Fill(Color(128, 0, 128)); // Purple for the load button
-    buttons.emplace_back(loadIcon, Vector2(start_x + (button_size + spacing) * 5, start_y), Vector2(button_size, button_size));
-
-    // Clear Image button
-    Image clearIcon(button_size, button_size);
-    clearIcon.Fill(Color(192, 192, 192)); // Gray for the clear button
-    buttons.emplace_back(clearIcon, Vector2(start_x + (button_size + spacing) * 6, start_y), Vector2(button_size, button_size));
-
-    // Eraser button
-    Image eraserIcon(button_size, button_size);
-    eraserIcon.Fill(Color(255, 20, 147)); // Pink for the eraser button
-    buttons.emplace_back(eraserIcon, Vector2(start_x + (button_size + spacing) * 7, start_y), Vector2(button_size, button_size));
-
-    // Add other buttons as needed
+        // Clean up dynamically allocated image (it gets copied into the Button)
+        delete buttonImage;
+    }
 }
+
 void ParticleSystem::Init() {
     for (int i = 0; i < MAX_PARTICLES; ++i) {
         particles[i].inactive = true; // Start as inactive
@@ -436,3 +454,4 @@ void ParticleSystem::Render(Image* framebuffer) {
         }
     }
 }
+
