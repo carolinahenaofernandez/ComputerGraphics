@@ -38,6 +38,16 @@ int Application::ComputeRadius(int x1, int y1, int x2, int y2) {
 }
 
 void Application::Render(void) {
+    // Define the dimensions of the gray rectangle
+        int toolbar_height = 50; // Height of the rectangle
+        int toolbar_width = window_width; // Full width of the window
+        int toolbar_x = 0; // Top-left corner x-coordinate
+        int toolbar_y = 0; // Top-left corner y-coordinate
+
+        // Draw the gray rectangle
+        framebuffer.DrawRect(toolbar_x, toolbar_y, toolbar_width, toolbar_height,
+                             Color(192, 192, 192), 0, true, Color(192, 192, 192)); // Filled gray rectangle
+
     for (const Button& button : buttons) {
             button.Render(framebuffer);
         }
@@ -470,4 +480,3 @@ void ParticleSystem::Render(Image* framebuffer) {
         }
     }
 }
-
