@@ -63,6 +63,9 @@ public:
     ParticleSystem particleSystem; // Particle system instance
     bool particleSystemActive = false; // Flag to activate or deactivate the particle system
     bool buttonsstate = false;
+    static const int numButtons = 16;
+    Button* butt[numButtons];
+
 
 
     float time;
@@ -118,3 +121,4 @@ public:
         return Vector2(float(w), float(h));
     }
 };
+
