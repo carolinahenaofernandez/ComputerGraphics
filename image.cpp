@@ -310,8 +310,8 @@ bool Image::SaveTGA(const char* filename)
 }
 
 void Image::DrawRect(int x, int y, int w, int h, const Color&
-    borderColor, int borderWidth, bool isFilled,
-    const Color& fillColor) {
+                     borderColor, int borderWidth, bool isFilled,
+                     const Color& fillColor) {
     // Normalize coordinates to ensure positive width and height
     int startX = std::min(x, x + w); // Determine the left edge
     int startY = std::min(y, y + h); // Determine the top edge
@@ -431,7 +431,7 @@ void FloatImage::Resize(unsigned int width, unsigned int height)
 }
 
 void Image::DrawLineDDA(int x0, int y0, int x1, int y1,
-    const Color& color) {
+                        const Color& color) {
     // Calculate the differences in x and y
     int dx = x1 - x0;
     int dy = y1 - y0;
@@ -452,7 +452,7 @@ void Image::DrawLineDDA(int x0, int y0, int x1, int y1,
         // Set the pixel at the rounded position
         if (x >= 0 && x < width && y >= 0 && y < height) {
             SetPixel(static_cast<int>(round(x)),
-                static_cast<int>(round(y)), color);
+                     static_cast<int>(round(y)), color);
         }
 
         // Increment x and y
@@ -461,7 +461,7 @@ void Image::DrawLineDDA(int x0, int y0, int x1, int y1,
     }
 }
 void Image::ScanLineDDA(int x0, int y0, int x1, int y1,
-    std::vector<std::pair<int, int>>& table, int minY) {
+                        std::vector<std::pair<int, int>>& table, int minY) {
     // Early return if y0 == y1 (horizontal line)
     if (y0 == y1) return;
 
@@ -485,8 +485,8 @@ void Image::ScanLineDDA(int x0, int y0, int x1, int y1,
 }
 
 void Image::DrawTriangle(const Vector2& p0, const Vector2& p1,
-    const Vector2& p2, const Color& borderColor,
-    bool isFilled, const Color& fillColor) {
+                         const Vector2& p2, const Color& borderColor,
+                         bool isFilled, const Color& fillColor) {
     // Step 1: Sort vertices by Y-coordinate
     Vector2 v0 = p0, v1 = p1, v2 = p2;
     if (v0.y > v1.y) std::swap(v0, v1);
@@ -496,7 +496,7 @@ void Image::DrawTriangle(const Vector2& p0, const Vector2& p1,
     // Step 2: Initialize AET
     int minY = (int)v0.y;
     int maxY = (int)v2.y;
-    std::vector<std::pair<int, int>> AET(maxY - minY + 1, { INT_MAX, INT_MIN });
+    std::vector<std::pair<int, int>> AET(maxY - minY + 1, {INT_MAX, INT_MIN});
 
     // Step 3: Use ScanLineDDA to populate AET
     ScanLineDDA((int)v0.x, (int)v0.y, (int)v1.x, (int)v1.y, AET, minY);
@@ -525,8 +525,8 @@ void Image::DrawTriangle(const Vector2& p0, const Vector2& p1,
 //void Image::DrawCircle(int xc, int yc, int radius, const Color& color, bool isFilled)
 
 void Image::DrawCircle(int xc, int yc, int r, const Color&
-    borderColor, int borderWidth, bool
-    isFilled, const Color& fillColor) {
+                       borderColor,int borderWidth, bool
+                       isFilled, const Color& fillColor){
     // Start at the topmost point
     int x = 0;
     int y = r;
@@ -565,16 +565,16 @@ void Image::DrawCircle(int xc, int yc, int r, const Color&
     if (borderWidth != 1) {
         for (int i = 1; i <= borderWidth; i++) {
             DrawCircle(xc, yc, r - i, borderColor, 1, false, fillColor);
-            DrawCircle(xc + 1, yc, r - i, borderColor, 1, false, fillColor);
-            DrawCircle(xc, yc + 1, r - i, borderColor, 1, false, fillColor);
+            DrawCircle(xc+1, yc, r - i, borderColor, 1, false, fillColor);
+            DrawCircle(xc, yc+1, r - i, borderColor, 1, false, fillColor);
         }
     }
 
-
-    if (isFilled == true) {
+        
+    if(isFilled==true){
         for (int i = 0; i < r; i++) {
-            DrawCircle(xc, yc, i, borderColor, 1);
-            DrawCircle(xc + 1, yc, i, borderColor, 1);
+            DrawCircle(xc, yc, i, borderColor,1 );
+            DrawCircle(xc+1, yc, i, borderColor, 1);
             DrawCircle(xc, yc + 1, i, borderColor, 1);
         }
     }
