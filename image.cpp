@@ -110,6 +110,33 @@ Image Image::GetArea(unsigned int start_x, unsigned int start_y, unsigned int wi
     return result;
 }
 
+void Image::FlipX()
+{
+    int row_size = bytes_per_pixel * width;
+    int half_width = width / 2; // Only iterate over half of each row
+
+#pragma omp parallel for
+    for (int y = 0; y < height; ++y)
+    {
+        Uint8* row_start = (Uint8*)pixels + y * row_size; // Pointer to the start of the current row
+        Uint8* temp_pixel = new Uint8[bytes_per_pixel];   // Temporary storage for one pixel
+
+        // Swap pixels in the row
+        for (int x = 0; x < half_width; ++x)
+        {
+            Uint8* left_pixel = row_start + x * bytes_per_pixel;
+            Uint8* right_pixel = row_start + (width - x - 1) * bytes_per_pixel;
+
+            // Swap left and right pixels
+            memcpy(temp_pixel, left_pixel, bytes_per_pixel);
+            memcpy(left_pixel, right_pixel, bytes_per_pixel);
+            memcpy(right_pixel, temp_pixel, bytes_per_pixel);
+        }
+
+        delete[] temp_pixel; // Free temporary pixel storage
+    }
+}
+
 void Image::FlipY()
 {
     int row_size = bytes_per_pixel * width;
@@ -185,7 +212,7 @@ bool Image::LoadPNG(const char* filename, bool flip_y)
 }
 
 // Loads an image from a TGA file
-bool Image::LoadTGA(const char* filename, bool flip_y)
+bool Image::LoadTGA(const char* filename, bool flip_y, bool flip_x)
 {
     unsigned char TGAheader[12] = { 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     unsigned char TGAcompare[12];
@@ -252,7 +279,6 @@ bool Image::LoadTGA(const char* filename, bool flip_y)
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
             unsigned int pos = y * width * bytesPerPixel + x * bytesPerPixel;
-            // Make sure we don't access out of memory
             if ((pos < imageSize) && (pos + 1 < imageSize) && (pos + 2 < imageSize))
                 SetPixelUnsafe(x, height - y - 1, Color(tgainfo->data[pos + 2], tgainfo->data[pos + 1], tgainfo->data[pos]));
         }
@@ -310,8 +336,8 @@ bool Image::SaveTGA(const char* filename)
 }
 
 void Image::DrawRect(int x, int y, int w, int h, const Color&
-                     borderColor, int borderWidth, bool isFilled,
-                     const Color& fillColor) {
+    borderColor, int borderWidth, bool isFilled,
+    const Color& fillColor) {
     // Normalize coordinates to ensure positive width and height
     int startX = std::min(x, x + w); // Determine the left edge
     int startY = std::min(y, y + h); // Determine the top edge
@@ -360,8 +386,7 @@ void Image::DrawRect(int x, int y, int w, int h, const Color&
 
 #ifndef IGNORE_LAMBDAS
 
-// You can apply and algorithm for two images and store the result in the first one
-// ForEachPixel( img, img2, [](Color a, Color b) { return a + b; } );
+
 template <typename F>
 void ForEachPixel(Image& img, const Image& img2, F f) {
     for (unsigned int pos = 0; pos < img.width * img.height; ++pos)
@@ -431,7 +456,7 @@ void FloatImage::Resize(unsigned int width, unsigned int height)
 }
 
 void Image::DrawLineDDA(int x0, int y0, int x1, int y1,
-                        const Color& color) {
+    const Color& color) {
     // Calculate the differences in x and y
     int dx = x1 - x0;
     int dy = y1 - y0;
@@ -452,7 +477,7 @@ void Image::DrawLineDDA(int x0, int y0, int x1, int y1,
         // Set the pixel at the rounded position
         if (x >= 0 && x < width && y >= 0 && y < height) {
             SetPixel(static_cast<int>(round(x)),
-                     static_cast<int>(round(y)), color);
+                static_cast<int>(round(y)), color);
         }
 
         // Increment x and y
@@ -461,7 +486,7 @@ void Image::DrawLineDDA(int x0, int y0, int x1, int y1,
     }
 }
 void Image::ScanLineDDA(int x0, int y0, int x1, int y1,
-                        std::vector<std::pair<int, int>>& table, int minY) {
+    std::vector<std::pair<int, int>>& table, int minY) {
     // Early return if y0 == y1 (horizontal line)
     if (y0 == y1) return;
 
@@ -485,8 +510,8 @@ void Image::ScanLineDDA(int x0, int y0, int x1, int y1,
 }
 
 void Image::DrawTriangle(const Vector2& p0, const Vector2& p1,
-                         const Vector2& p2, const Color& borderColor,
-                         bool isFilled, const Color& fillColor) {
+    const Vector2& p2, const Color& borderColor,
+    bool isFilled, const Color& fillColor) {
     // Step 1: Sort vertices by Y-coordinate
     Vector2 v0 = p0, v1 = p1, v2 = p2;
     if (v0.y > v1.y) std::swap(v0, v1);
@@ -496,7 +521,7 @@ void Image::DrawTriangle(const Vector2& p0, const Vector2& p1,
     // Step 2: Initialize AET
     int minY = (int)v0.y;
     int maxY = (int)v2.y;
-    std::vector<std::pair<int, int>> AET(maxY - minY + 1, {INT_MAX, INT_MIN});
+    std::vector<std::pair<int, int>> AET(maxY - minY + 1, { INT_MAX, INT_MIN });
 
     // Step 3: Use ScanLineDDA to populate AET
     ScanLineDDA((int)v0.x, (int)v0.y, (int)v1.x, (int)v1.y, AET, minY);
@@ -525,8 +550,8 @@ void Image::DrawTriangle(const Vector2& p0, const Vector2& p1,
 //void Image::DrawCircle(int xc, int yc, int radius, const Color& color, bool isFilled)
 
 void Image::DrawCircle(int xc, int yc, int r, const Color&
-                       borderColor,int borderWidth, bool
-                       isFilled, const Color& fillColor){
+    borderColor, int borderWidth, bool
+    isFilled, const Color& fillColor) {
     // Start at the topmost point
     int x = 0;
     int y = r;
@@ -565,16 +590,16 @@ void Image::DrawCircle(int xc, int yc, int r, const Color&
     if (borderWidth != 1) {
         for (int i = 1; i <= borderWidth; i++) {
             DrawCircle(xc, yc, r - i, borderColor, 1, false, fillColor);
-            DrawCircle(xc+1, yc, r - i, borderColor, 1, false, fillColor);
-            DrawCircle(xc, yc+1, r - i, borderColor, 1, false, fillColor);
+            DrawCircle(xc + 1, yc, r - i, borderColor, 1, false, fillColor);
+            DrawCircle(xc, yc + 1, r - i, borderColor, 1, false, fillColor);
         }
     }
 
-        
-    if(isFilled==true){
+
+    if (isFilled == true) {
         for (int i = 0; i < r; i++) {
-            DrawCircle(xc, yc, i, borderColor,1 );
-            DrawCircle(xc+1, yc, i, borderColor, 1);
+            DrawCircle(xc, yc, i, borderColor, 1);
+            DrawCircle(xc + 1, yc, i, borderColor, 1);
             DrawCircle(xc, yc + 1, i, borderColor, 1);
         }
     }
