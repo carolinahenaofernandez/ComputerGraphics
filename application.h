@@ -28,7 +28,6 @@ public:
     void Update(float dt);             // Update particles
 };
 
-
 class Button {
 public:
     Image icon;       // The image for the button
@@ -36,8 +35,7 @@ public:
     Vector2 size;     // Size of the button
 
     Button(const Image& icon, Vector2 position, Vector2 size)
-        : icon(icon), position(position), size(size) {
-    }
+        : icon(icon), position(position), size(size) {}
 
     // Render the button on the screen
     void Render(Image& framebuffer) const {
@@ -47,7 +45,7 @@ public:
     // Check if a mouse click is inside the button
     bool IsMouseInside(const Vector2& mousePosition) const {
         return mousePosition.x >= position.x && mousePosition.x <= position.x + size.x &&
-            mousePosition.y >= position.y && mousePosition.y <= position.y + size.y;
+               mousePosition.y >= position.y && mousePosition.y <= position.y + size.y;
     }
 };
 
@@ -65,6 +63,7 @@ public:
     ParticleSystem particleSystem; // Particle system instance
     bool particleSystemActive = false; // Flag to activate or deactivate the particle system
     bool buttonsstate = false;
+
 
     float time;
     int exercise = 0;
