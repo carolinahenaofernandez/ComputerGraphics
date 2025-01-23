@@ -35,7 +35,8 @@ public:
     Vector2 size;     // Size of the button
 
     Button(const Image& icon, Vector2 position, Vector2 size)
-        : icon(icon), position(position), size(size) {}
+        : icon(icon), position(position), size(size) {
+    }
 
     // Render the button on the screen
     void Render(Image& framebuffer) const {
@@ -45,7 +46,7 @@ public:
     // Check if a mouse click is inside the button
     bool IsMouseInside(const Vector2& mousePosition) const {
         return mousePosition.x >= position.x && mousePosition.x <= position.x + size.x &&
-               mousePosition.y >= position.y && mousePosition.y <= position.y + size.y;
+            mousePosition.y >= position.y && mousePosition.y <= position.y + size.y;
     }
 };
 
@@ -62,14 +63,14 @@ public:
     std::vector<Button> buttons; // Store all buttons
     ParticleSystem particleSystem; // Particle system instance
     bool particleSystemActive = false; // Flag to activate or deactivate the particle system
-    bool buttonsstate = false;
+    bool buttonsstate = true;
     static const int numButtons = 16;
     Button* butt[numButtons];
 
 
 
     float time;
-    int exercise = 0;
+    int exercise = 33;
     int startX, startY;   // Starting mouse position
     int endX, endY;       // Ending mouse position
     bool shouldRender;    // Flag to indicate if something should be rendered
@@ -86,6 +87,7 @@ public:
     int mouse_state; // Tells which buttons are pressed
     Vector2 mouse_position; // Last mouse position
     Vector2 mouse_delta; // Mouse movement in the last frame
+    bool mouseButtonPressed=false;
 
     void OnKeyPressed(SDL_KeyboardEvent event);
     void OnMouseButtonDown(SDL_MouseButtonEvent event);
@@ -96,6 +98,9 @@ public:
 
     // CPU Global framebuffer
     Image framebuffer;
+
+	Image backupFramebuffer; // Backup framebuffer to restore the original state
+
 
     // Constructor and main methods
     Application(const char* caption, int width, int height);
@@ -112,6 +117,8 @@ public:
         this->window_width = width;
         this->window_height = height;
         this->framebuffer.Resize(width, height);
+        this->backupFramebuffer.Resize(width, height); // Update backup framebuffer as well
+
     }
 
     Vector2 GetWindowSize()
