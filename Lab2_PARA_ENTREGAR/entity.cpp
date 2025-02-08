@@ -56,9 +56,11 @@ void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
             projectedVertices[j].x = (projectedVertices[j].x + 1.0f) * 0.5f * framebuffer->width;
             projectedVertices[j].y = (1.0f - projectedVertices[j].y) * 0.5f * framebuffer->height; //flip y-axis.
         }
-        framebuffer->DrawLineDDA(projectedVertices[0].x, projectedVertices[0].y, projectedVertices[1].x, projectedVertices[1].y, c);
-        framebuffer->DrawLineDDA(projectedVertices[1].x, projectedVertices[1].y, projectedVertices[2].x, projectedVertices[2].y, c);
-        framebuffer->DrawLineDDA(projectedVertices[2].x, projectedVertices[2].y, projectedVertices[0].x, projectedVertices[0].y, c);
+
+        //Hola pookie, acabo de editar aixo, crec que se veuen millor els triangles aixi.
+        framebuffer->DrawLineDDA(projectedVertices[0].x, projectedVertices[0].y, projectedVertices[2].x, projectedVertices[2].y, c);
+        framebuffer->DrawLineDDA(projectedVertices[2].x, projectedVertices[2].y, projectedVertices[1].x, projectedVertices[1].y, c);
+        framebuffer->DrawLineDDA(projectedVertices[1].x, projectedVertices[1].y, projectedVertices[0].x, projectedVertices[0].y, c);
         
         
     }
