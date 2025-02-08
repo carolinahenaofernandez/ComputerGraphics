@@ -9,8 +9,8 @@ Application::Application(const char* caption, int width, int height)
 {
     this->window = createWindow(caption, width, height);
 
-    int w,h;
-    SDL_GetWindowSize(window,&w,&h);
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
 
     this->mouse_state = 0;
     this->time = 0.f;
@@ -42,18 +42,18 @@ void Application::Init(void)
     entity1->mesh = lee;
     entity1->id = 1;
     entity1->model.Translate(-1.5f, 0.0f, 0.0f);
-    
+
     Entity* entity2 = new Entity();
     entity2->mesh = lee;
     entity2->id = 2;
     entity2->model.Translate(1.5f, 0.0f, 0.0f);
-    
+
     Entity* entity3 = new Entity();
     entity3->mesh = lee;
     entity3->id = 3;
     entity3->model.Translate(0.0f, 0.0f, 0.0f);
-    
-    
+
+
     entities.push_back(entity1);
     entities.push_back(entity2);
     entities.push_back(entity3);
@@ -78,13 +78,14 @@ void Application::Render(void)
 
             if (entity->id == 1) {
                 entityColor = Color(0, 255, 0); // Verde
-            } else if (entity->id == 2) {
+            }
+            else if (entity->id == 2) {
                 entityColor = Color(0, 0, 255); // Azul
             }
 
             entity->Render(&framebuffer, camera, entityColor);
             std::cout << "Rendering single entity ID " << entity->id << " with color ("
-                      << entityColor.r << ", " << entityColor.g << ", " << entityColor.b << ")" << std::endl;
+                << entityColor.r << ", " << entityColor.g << ", " << entityColor.b << ")" << std::endl;
         }
     }
     else if (current_scene == 2) // Dibujar múltiples entidades animadas
@@ -95,13 +96,14 @@ void Application::Render(void)
 
                 if (entity->id == 1) {
                     entityColor = Color(0, 255, 0); // Verde
-                } else if (entity->id == 2) {
+                }
+                else if (entity->id == 2) {
                     entityColor = Color(0, 0, 255); // Azul
                 }
 
                 entity->Render(&framebuffer, camera, entityColor);
                 std::cout << "Rendering entity ID " << entity->id << " with color ("
-                          << entityColor.r << ", " << entityColor.g << ", " << entityColor.b << ")" << std::endl;
+                    << entityColor.r << ", " << entityColor.g << ", " << entityColor.b << ")" << std::endl;
             }
         }
     }
@@ -117,8 +119,8 @@ void Application::Render(void)
 // Called after render
 void Application::Update(float seconds_elapsed)
 {
-    for(Entity* entity : entities){
-        if(entity)
+    for (Entity* entity : entities) {
+        if (entity)
             entity->Update(seconds_elapsed);
     }
 }
@@ -131,70 +133,71 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
     bool updated = false; // Para verificar si necesitamos actualizar la proyección
 
     switch (event.keysym.sym) {
-        case SDLK_ESCAPE:
-            exit(0);
-            break; // ESC key, kill the app
+    case SDLK_ESCAPE:
+        exit(0);
+        break; // ESC key, kill the app
 
-        case SDLK_1:
-            current_scene = 1; // Dibujar una sola entidad
-            break;
+    case SDLK_1:
+        current_scene = 1; 
+        break;
 
-        case SDLK_2:
-            current_scene = 2; // Dibujar múltiples entidades animadas
-            break;
+    case SDLK_2:
+        current_scene = 2; 
+        break;
 
-        case SDLK_n:
-            current_property = 'N';
-            break;
-        
-        case SDLK_f:
-            current_property = 'F';
-            break;
-        
-        case SDLK_v:
-            current_property = 'V';
-            break;
+    case SDLK_n:
+        current_property = 'N';
+        break;
 
-        case SDLK_PLUS:
-        case SDLK_EQUALS: // Algunas teclas usan '=' en lugar de '+'
-            if (current_property == 'N') { camera->near_plane += 0.1f; updated = true; }
-            if (current_property == 'F') { camera->far_plane += 1.0f; updated = true; }
-            if (current_property == 'V') { camera->fov += 1.0f; updated = true; }
+    case SDLK_f:
+        current_property = 'F';
+        break;
 
-            if (updated)
-                camera->UpdateProjectionMatrix();
-            
-            break;
+    case SDLK_v:
+        current_property = 'V';
+        break;
 
-        case SDLK_MINUS:
-            if (current_property == 'N') { camera->near_plane = std::max(0.01f, camera->near_plane - 0.1f); updated = true; }
-            if (current_property == 'F') { camera->far_plane = std::max(1.0f, camera->far_plane - 1.0f); updated = true; }
-            if (current_property == 'V') { camera->fov = std::max(10.0f, camera->fov - 1.0f); updated = true; }
+    case SDLK_EQUALS:
+        break;
+    case SDLK_PLUS:
+        if (current_property == 'N') { camera->near_plane += 0.2f; updated = true; }
+        if (current_property == 'F') { camera->far_plane += 1.0f; updated = true; }
+        if (current_property == 'V') { camera->fov += 2.0f; updated = true; }
 
-            if (updated)
-                camera->UpdateProjectionMatrix();
-            
-            break;
+        if (updated)
+            camera->UpdateProjectionMatrix();
+
+        break;
+
+    case SDLK_MINUS:
+        if (current_property == 'N') { camera->near_plane = std::max(0.01f, camera->near_plane - 0.2f); updated = true; }
+        if (current_property == 'F') { camera->far_plane = std::max(1.0f, camera->far_plane - 1.0f); updated = true; }
+        if (current_property == 'V') { camera->fov = std::max(1.0f, camera->fov - 2.0f); updated = true; }
+
+        if (updated)
+            camera->UpdateProjectionMatrix();
+
+        break;
     }
 }
 
 
-void Application::OnMouseButtonDown( SDL_MouseButtonEvent event )
+void Application::OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
-    if (event.button == SDL_BUTTON_LEFT){
+    if (event.button == SDL_BUTTON_LEFT) {
         mouse_state |= SDL_BUTTON(SDL_BUTTON_LEFT);
     }
-    if (event.button == SDL_BUTTON_RIGHT){
+    if (event.button == SDL_BUTTON_RIGHT) {
         mouse_state |= SDL_BUTTON(SDL_BUTTON_RIGHT);
     }
 }
 
-void Application::OnMouseButtonUp( SDL_MouseButtonEvent event )
+void Application::OnMouseButtonUp(SDL_MouseButtonEvent event)
 {
-    if (event.button == SDL_BUTTON_LEFT){
+    if (event.button == SDL_BUTTON_LEFT) {
         mouse_state &= ~SDL_BUTTON(SDL_BUTTON_LEFT);
     }
-    if (event.button == SDL_BUTTON_RIGHT){
+    if (event.button == SDL_BUTTON_RIGHT) {
         mouse_state &= ~SDL_BUTTON(SDL_BUTTON_RIGHT);
     }
 }
@@ -211,13 +214,13 @@ void Application::OnMouseMove(SDL_MouseButtonEvent event) {
     if (mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
         float sensitivity = 0.01f;
         camera->center.x += mouse_delta.x * sensitivity;
-        camera->center.y -= mouse_delta.y * sensitivity; // Inverted for intuitive controls
+        camera->center.y += mouse_delta.y * sensitivity; // Inverted for intuitive controls
         camera->UpdateViewMatrix();
     }
 
     // Orbit the camera when the left button is pressed
     if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-        float angle_x = mouse_delta.x * 0.005f; // Sensitivity for horizontal rotation
+        float angle_x = mouse_delta.x * 0.0005f; // Sensitivity for horizontal rotation
         float angle_y = mouse_delta.y * 0.005f; // Sensitivity for vertical rotation
 
         Vector3 direction = camera->eye - camera->center;
@@ -230,6 +233,7 @@ void Application::OnMouseMove(SDL_MouseButtonEvent event) {
 
         camera->eye = camera->center + direction;
         camera->UpdateViewMatrix();
+
     }
 
     // Update last mouse position for next movement
@@ -243,7 +247,7 @@ void Application::OnWheel(SDL_MouseWheelEvent event)
 
     float zoom_factor = 1.1f;
     Vector3 direction = camera->eye - camera->center;
-    
+
     if (dy > 0) // Zoom in
         direction = direction * (1.0f / zoom_factor);
     else if (dy < 0) // Zoom out
