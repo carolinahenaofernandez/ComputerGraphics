@@ -43,8 +43,11 @@ void Entity::Update(float seconds_elapsed) {
     else if (id == 3){
         model.SetIdentity();
         float scale = 1.0f + sin(time_acumulator) * 0.5f;
-        //model.Scale(scale,scale,scale);
-    }
+            model.M[0][0] = scale;  // Escalado en X
+            model.M[1][1] = scale;  // Escalado en Y
+            model.M[2][2] = scale;  // Escalado en Z
+        }
+
 }
 
 void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
