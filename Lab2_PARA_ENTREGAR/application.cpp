@@ -69,26 +69,46 @@ void Application::Render(void)
 
     framebuffer.Fill(Color(0, 0, 0));
 
-    for (Entity* entity : entities) {
-        if(entity) {
-            Color entityColor = entity->color;
+    if (current_scene == 1) // Dibujar una sola entidad
+    {
+        if (!entities.empty() && entities[0]) // Asegurarse de que hay al menos una entidad
+        {
+            Entity* entity = entities[2];
+            Color entityColor = Color(255, 255, 255); // Color por defecto
 
             if (entity->id == 1) {
-                entityColor = Color(0, 255, 0);
+                entityColor = Color(0, 255, 0); // Verde
             } else if (entity->id == 2) {
-                entityColor = Color(0, 0, 255);
-            } else {
-                entityColor = Color(255, 255, 255);
+                entityColor = Color(0, 0, 255); // Azul
             }
 
             entity->Render(&framebuffer, camera, entityColor);
-            std::cout << "Rendering entity ID " << entity->id << " with color ("
+            std::cout << "Rendering single entity ID " << entity->id << " with color ("
                       << entityColor.r << ", " << entityColor.g << ", " << entityColor.b << ")" << std::endl;
         }
     }
+    else if (current_scene == 2) // Dibujar múltiples entidades animadas
+    {
+        for (Entity* entity : entities) {
+            if (entity) {
+                Color entityColor = Color(255, 255, 255); // Color por defecto
 
-    framebuffer.Render(); 
+                if (entity->id == 1) {
+                    entityColor = Color(0, 255, 0); // Verde
+                } else if (entity->id == 2) {
+                    entityColor = Color(0, 0, 255); // Azul
+                }
+
+                entity->Render(&framebuffer, camera, entityColor);
+                std::cout << "Rendering entity ID " << entity->id << " with color ("
+                          << entityColor.r << ", " << entityColor.g << ", " << entityColor.b << ")" << std::endl;
+            }
+        }
+    }
+
+    framebuffer.Render();
 }
+
 
 
 
@@ -108,13 +128,21 @@ void Application::Update(float seconds_elapsed)
 void Application::OnKeyPressed(SDL_KeyboardEvent event)
 {
     // KEY CODES: https://wiki.libsdl.org/SDL2/SDL_Keycode
-    bool updated = false; // Ensure variable is declared before switch
+    bool updated = false; // Para verificar si necesitamos actualizar la proyección
 
     switch (event.keysym.sym) {
         case SDLK_ESCAPE:
             exit(0);
             break; // ESC key, kill the app
-        
+
+        case SDLK_1:
+            current_scene = 1; // Dibujar una sola entidad
+            break;
+
+        case SDLK_2:
+            current_scene = 2; // Dibujar múltiples entidades animadas
+            break;
+
         case SDLK_n:
             current_property = 'N';
             break;
@@ -128,7 +156,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
             break;
 
         case SDLK_PLUS:
-        case SDLK_EQUALS: // Some keyboards use '=' instead of '+'
+        case SDLK_EQUALS: // Algunas teclas usan '=' en lugar de '+'
             if (current_property == 'N') { camera->near_plane += 0.1f; updated = true; }
             if (current_property == 'F') { camera->far_plane += 1.0f; updated = true; }
             if (current_property == 'V') { camera->fov += 1.0f; updated = true; }
@@ -136,8 +164,8 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
             if (updated)
                 camera->UpdateProjectionMatrix();
             
-            break; // Ensure no fall-through
-        
+            break;
+
         case SDLK_MINUS:
             if (current_property == 'N') { camera->near_plane = std::max(0.01f, camera->near_plane - 0.1f); updated = true; }
             if (current_property == 'F') { camera->far_plane = std::max(1.0f, camera->far_plane - 1.0f); updated = true; }
@@ -149,6 +177,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
             break;
     }
 }
+
 
 void Application::OnMouseButtonDown( SDL_MouseButtonEvent event )
 {
