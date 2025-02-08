@@ -105,27 +105,48 @@ void Application::Update(float seconds_elapsed)
 
 
 //keyboard press event
-void Application::OnKeyPressed( SDL_KeyboardEvent event )
+void Application::OnKeyPressed(SDL_KeyboardEvent event)
 {
     // KEY CODES: https://wiki.libsdl.org/SDL2/SDL_Keycode
-    switch(event.keysym.sym) {
-        case SDLK_ESCAPE: exit(0); break; // ESC key, kill the app
-        case SDLK_n: current_property = 'N'; break;
-                case SDLK_f: current_property = 'F'; break;
-                case SDLK_v: current_property = 'V'; break;
-                case SDLK_PLUS:
-                case SDLK_EQUALS: // Algunas teclas usan '=' en lugar de '+'
-                    if (current_property == 'N') camera->near_plane += 0.1f;
-                    if (current_property == 'F') camera->far_plane += 1.0f;
-                    if (current_property == 'V') camera->fov += 1.0f;
-                    camera->UpdateProjectionMatrix();
-                    break;
-                case SDLK_MINUS:
-                    if (current_property == 'N') camera->near_plane = std::max(0.01f, camera->near_plane - 0.1f);
-                    if (current_property == 'F') camera->far_plane = std::max(1.0f, camera->far_plane - 1.0f);
-                    if (current_property == 'V') camera->fov = std::max(10.0f, camera->fov - 1.0f);
-                    camera->UpdateProjectionMatrix();
-                    break;
+    bool updated = false; // Ensure variable is declared before switch
+
+    switch (event.keysym.sym) {
+        case SDLK_ESCAPE:
+            exit(0);
+            break; // ESC key, kill the app
+        
+        case SDLK_n:
+            current_property = 'N';
+            break;
+        
+        case SDLK_f:
+            current_property = 'F';
+            break;
+        
+        case SDLK_v:
+            current_property = 'V';
+            break;
+
+        case SDLK_PLUS:
+        case SDLK_EQUALS: // Some keyboards use '=' instead of '+'
+            if (current_property == 'N') { camera->near_plane += 0.1f; updated = true; }
+            if (current_property == 'F') { camera->far_plane += 1.0f; updated = true; }
+            if (current_property == 'V') { camera->fov += 1.0f; updated = true; }
+
+            if (updated)
+                camera->UpdateProjectionMatrix();
+            
+            break; // Ensure no fall-through
+        
+        case SDLK_MINUS:
+            if (current_property == 'N') { camera->near_plane = std::max(0.01f, camera->near_plane - 0.1f); updated = true; }
+            if (current_property == 'F') { camera->far_plane = std::max(1.0f, camera->far_plane - 1.0f); updated = true; }
+            if (current_property == 'V') { camera->fov = std::max(10.0f, camera->fov - 1.0f); updated = true; }
+
+            if (updated)
+                camera->UpdateProjectionMatrix();
+            
+            break;
     }
 }
 
