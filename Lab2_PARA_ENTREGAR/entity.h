@@ -9,6 +9,9 @@ class Entity {
 public:
     Mesh* mesh;  // Pointer to a mesh object (not owned by Entity)
     Matrix44 model;  // Transformation matrix
+    Color color;
+    int id;
+
 
     // Default Constructor
     Entity();
