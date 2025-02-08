@@ -5,7 +5,7 @@ void Application::Init(void)
 {
     std::cout << "Initiating app..." << std::endl;
     camera = new Camera();
-    camera->LookAt(Vector3(0,0,1), Vector3(0,0,0), Vector3(0,-1,0));
+    camera->LookAt(Vector3(0,0,1), Vector3(0,0.25,0), Vector3(0,-1,0));
     camera->SetPerspective(45.0f, (float)framebuffer.width / (float)framebuffer.height, 0.1f, 50.0f);
 
     Mesh* lee = new Mesh();
