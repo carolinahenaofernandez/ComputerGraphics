@@ -2,7 +2,7 @@
 #include "camera.h"
 #include "utils.h"
 
-#include <cmath>  // For sin and cos functions 
+#include <cmath>  // For sin and cos functions
 
 // Default constructor: no mesh, identity model matrix
 Entity::Entity() {
@@ -50,6 +50,7 @@ void Entity::Update(float seconds_elapsed) {
 
 }
 
+
 void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
     // Placeholder for rendering logic
     if (!mesh || !camera) return;
@@ -75,12 +76,9 @@ void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
             projectedVertices[j].x = (projectedVertices[j].x + 1.0f) * 0.5f * framebuffer->width;
             projectedVertices[j].y = (1.0f - projectedVertices[j].y) * 0.5f * framebuffer->height; //flip y-axis.
         }
-
-        //Hola pookie, acabo de editar aixo, crec que se veuen millor els triangles aixi.
         framebuffer->DrawLineDDA(projectedVertices[0].x, projectedVertices[0].y, projectedVertices[2].x, projectedVertices[2].y, c);
         framebuffer->DrawLineDDA(projectedVertices[2].x, projectedVertices[2].y, projectedVertices[1].x, projectedVertices[1].y, c);
         framebuffer->DrawLineDDA(projectedVertices[1].x, projectedVertices[1].y, projectedVertices[0].x, projectedVertices[0].y, c);
-        
-        
+
     }
 }
