@@ -28,7 +28,23 @@ Entity::~Entity() {
 }
 
 void Entity::Update(float seconds_elapsed) {
-    // Placeholder for now
+    static float time_acumulator = 0.0f;
+    time_acumulator += seconds_elapsed;
+    
+    if(id == 1){
+        model.SetIdentity();
+        model.Translate(-1.5f, sin(time_acumulator) * 0.5f, 0.0f);
+    }
+    else if (id == 2){
+        model.SetIdentity();
+        model.Translate(1.5f, 0.0f, 0.0f);
+        model.RotateLocal(time_acumulator, Vector3(0,1,0));
+    }
+    else if (id == 3){
+        model.SetIdentity();
+        float scale = 1.0f + sin(time_acumulator) * 0.5f;
+        //model.Scale(scale,scale,scale);
+    }
 }
 
 void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
