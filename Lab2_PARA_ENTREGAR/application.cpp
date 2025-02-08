@@ -47,15 +47,29 @@ void Application::Init(void)
 // Render one frame
 void Application::Render(void)
 {
-    //...
     std::cout << "Rendering frame..." << std::endl; // Debug message
-    for (Entity* entity : entities){
-        if (entity){
-            entity->Render(&framebuffer, camera, entity->color); // White wireframe
-            std::cout << "Rendering entity..." << std::endl;
+
+    framebuffer.Fill(Color(0, 0, 0));
+
+    for (Entity* entity : entities) {
+        if(entity) {
+            Color entityColor = entity->color;
+
+            if (entity->id == 1) {
+                entityColor = Color(0, 255, 0);
+            } else if (entity->id == 2) {
+                entityColor = Color(0, 0, 255);
+            } else {
+                entityColor = Color(255, 255, 255);
+            }
+
+            entity->Render(&framebuffer, camera, entityColor);
+            std::cout << "Rendering entity ID " << entity->id << " with color ("
+                      << entityColor.r << ", " << entityColor.g << ", " << entityColor.b << ")" << std::endl;
         }
     }
-    framebuffer.Render();
+
+    framebuffer.Render(); 
 }
 
 // Called after render
